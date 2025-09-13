@@ -1,0 +1,99 @@
+<!-- core/templates/core/explore.html -->
+{% extends 'accounts/base.html' %}
+
+{% block title %}Dishcover{% endblock %}
+
+{% block content %}
+<section class="py-12 px-6">
+    <div class="max-w-6xl mx-auto">
+        <h1
+            class="text-4xl font-extrabold text-center mb-8 text-transparent" style="color:black;">
+            Dishcover
+        </h1>
+
+        <!-- Tab Navigation -->
+        <div class="flex flex-wrap justify-center mb-8 border-b border-gray-700">
+            <!-- All Restaurant -->
+            <a href="?tab=all"
+                class="px-6 py-3 font-medium {% if tab == 'all_restaurants' %}text-red-400 border-b-2 border-red-400{% else %}text-gray-400 hover:text-red-300{% endif %}">
+                All Restaurants
+            </a>
+            
+            <!-- Recommendation -->
+            <a href="?tab=recommendation"
+                class="px-6 py-3 font-medium {% if tab == 'recommendation' %}text-pink-400 border-b-2 border-pink-400{% else %}text-gray-400 hover:text-pink-300{% endif %}">
+                Recommendation
+            </a>
+
+            <!-- Top Rating -->
+            <a href="?tab=top_rated"
+                class="px-6 py-3 font-medium {% if tab == 'top_rated' %}text-yellow-400 border-b-2 border-yellow-400{% else %}text-gray-400 hover:text-yellow-300{% endif %}">
+                Top Rating
+            </a>
+
+            <!-- Near You -->
+            <a href="?tab=near_you"
+                class="px-6 py-3 font-medium {% if tab == 'near_you' %}text-green-400 border-b-2 border-green-400{% else %}text-gray-400 hover:text-green-300{% endif %}">
+                Near You
+            </a>
+
+            <!-- Saved -->
+            <a href="?tab=saved"
+                class="px-6 py-3 font-medium {% if tab == 'saved' %}text-blue-400 border-b-2 border-blue-400{% else %}text-gray-400 hover:text-blue-300{% endif %}">
+                Saved
+            </a>
+        </div>
+
+        <!-- Hasil Pencarian -->
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for resto in restaurants %}
+            <div class="bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+                data-aos="fade-up">
+                {% if resto.photo %}
+                <img src="{{ resto.photo.url }}" alt="{{ resto.name }}" class="w-full h-48 object-cover">
+                {% else %}
+                <div class="w-full h-48 bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center">
+                    <span class="text-gray-700 text-2xl font-bold">No Photo</span>
+                </div>
+                {% endif %}
+
+                <div class="p-5" style="background-color: #b04c4c">
+                    <h3 class="text-xl font-bold text-white">{{ resto.name }}</h3>
+                    <p class="text-white text-sm mt-1">{{ resto.address|truncatechars:60 }}</p>
+
+                    <div class="flex items-center mt-2">
+                        <span class="text-yellow-400">{{ resto.avg_rating|floatformat:"1" }} ⭐</span>
+                        <span class="text-white text-sm ml-2">({{ resto.review_count }} review)</span>
+                    </div>
+
+                    <!-- Bookmark Button -->
+                    <div class="mt-4">
+                        <!-- Contoh di explore.html -->
+                        <form method="POST" action="{% url 'accounts:toggle_bookmark' resto.id %}" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="text-lg">
+                                {% if resto.id in bookmarked_resto_ids %}
+                                    ❤️ Saved
+                                {% else %}
+                                    ♡ Save
+                                {% endif %}
+                            </button>
+                        </form>
+                        <a href="{% url 'restaurants:detail' resto.id %}"
+                            class="ml-4 text-pink-400 hover:underline text-sm">Detail</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-gray-400 col-span-3 text-center">No restaurants to display yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    AOS.init({ duration: 600 });
+</script>
+{% endblock %}

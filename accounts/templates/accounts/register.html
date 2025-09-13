@@ -1,0 +1,111 @@
+<!-- accounts/templates/accounts/register.html -->
+{% extends 'accounts/base.html' %}
+{% load form_extras %}
+{% block title %}Register{% endblock %}
+
+{% block extra_css %}
+<style>
+  .toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: #6b7280;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex min-h-screen items-center justify-center px-4 py-12" data-aos="fade-up">
+  <div
+    class="max-w-md w-full space-y-8 bg-[#fffaf5] backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-red-200">
+
+    <!-- Logo & Judul -->
+    <div class="text-center">
+      <h2
+        class="mt-4 text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-800">
+        Join Peek&Map today
+      </h2>
+      <p class="mt-2 text-sm text-gray-600">Peek into restaurants, map your foodie adventures!</p>
+    </div>
+
+    <!-- Form -->
+    <form class="mt-8 space-y-6" method="post">
+      {% csrf_token %}
+
+      <!-- Username -->
+      <div data-aos="fade-right" data-aos-delay="100">
+  <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700">Username</label>
+  {{ form.username|add_class:"mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-500" }}
+  <div class="mt-1 text-sm text-red-600">{{ form.username.errors }}</div>
+</div>
+
+      <!-- Password 1 -->
+      <div data-aos="fade-right" data-aos-delay="200" class="relative">
+        <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-700">Password</label>
+        {{ form.password1|add_class:"mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-500"}}
+        <span class="toggle-password inline-block mt-2" onclick="togglePassword('id_password1', this)">
+          👁️
+        </span>
+        <div class="mt-1 text-sm text-red-600">{{ form.password1.errors }}</div>
+      </div>
+
+      <!-- Password 2 -->
+      <div data-aos="fade-right" data-aos-delay="300" class="relative">
+        <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-700">Konfirmasi Password</label>
+        {{ form.password2|add_class:"mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-500"}}
+        <span class="toggle-password inline-block mt-2" onclick="togglePassword('id_password2', this)">
+          👁️
+        </span>
+        <div class="mt-1 text-sm text-red-600">{{ form.password2.errors }}</div>
+      </div>
+
+      <!-- Submit -->
+      <div data-aos="zoom-in" data-aos-delay="400">
+        <button type="submit"
+          class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transform hover:scale-105 transition-all duration-200 shadow-md">
+          <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+            <svg class="h-5 w-5 text-green-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd"
+                d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1z"
+                clip-rule="evenodd" />
+            </svg>
+          </span>
+          Register now
+        </button>
+      </div>
+    </form>
+
+    <!-- Link Login -->
+    <div class="text-center text-sm" data-aos="fade-up" data-aos-delay="500">
+      <span class="text-gray-600">Already have an account? </span>
+      <a href="{% url 'accounts:login' %}"
+        class="font-medium text-red-700 hover:text-red-800 transition duration-150">
+        Login here
+      </a>
+    </div>
+
+    <!-- Dekorasi Sudut -->
+    <div class="absolute -top-5 -right-5 w-20 h-20 bg-red-100 rounded-full opacity-40 blur-xl"></div>
+    <div class="absolute -bottom-5 -left-5 w-20 h-20 bg-green-100 rounded-full opacity-30 blur-xl"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Fungsi untuk toggle password visibility
+  function togglePassword(fieldId, icon) {
+    const field = document.getElementById(fieldId);
+    if (field.type === "password") {
+      field.type = "text";
+      icon.textContent = "🙈";
+    } else {
+      field.type = "password";
+      icon.textContent = "👁️";
+    }
+  }
+</script>
+{% endblock %}

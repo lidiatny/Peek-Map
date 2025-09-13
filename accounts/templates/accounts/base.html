@@ -1,0 +1,144 @@
+<!-- accounts/templates/accounts/base.html -->
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Peek & Map{% endblock %}</title>
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#ec4899',
+                        secondary: '#8b5cf6',
+                        accent: '#f59e0b',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- AOS (Animate On Scroll) -->
+    <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/aos@2.3.4/dist/aos.js" defer></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-white text-white min-h-screen">
+
+    <!-- Inisialisasi AOS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            AOS.init({
+                duration: 800,
+                easing: 'slide',
+                once: true
+            });
+        });
+    </script>
+
+    <!-- Navbar -->
+    <nav class="backdrop-blur-md fixed w-full top-0 z-50 border-b border-pink-500/20" style="background-color: #b04c4c">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0">
+                    <a href="{% url 'core:home' %}" class="text-2xl font-extrabold text-transparent" style="color: white;">
+                        Peek & Map
+                    </a>
+                </div>
+
+                <!-- Menu Links -->
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="{% url 'core:home' %}" class="hover:text-pink-400 transition duration-200 font-medium">Home</a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'core:explore' %}" class="hover:text-purple-400 transition duration-200 font-medium">
+                            Dishcover
+                        </a>
+                        {% else %}
+                        <a href="{% url 'accounts:login' %}?next={% url 'core:explore' %}"
+                            class="hover:text-purple-400 transition duration-200 font-medium">
+                            Dishcover
+                        </a>
+{% endif %}
+                    </div>
+                </div>
+
+                <!-- Auth Buttons -->
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <span class="text-sm text-gray-300">Hello, <strong>{{ user.username }} !!</strong></span>
+
+                        <!-- Avatar (Clickable) -->
+                         <a href="{% url 'accounts:profile' %}" class="relative group">
+                            {% if user.profile and user.profile.photo %}
+                                <img src="{{ user.profile.photo.url }}" alt="Profile" class="w-8 h-8 rounded-full object-cover border-2 border-white group-hover:ring-2 group-hover:ring-red-400 transition">
+                            {% else %}
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center text-gray-700 text-xs font-bold border-2 border-white group-hover:ring-2 group-hover:ring-red-400 transition">
+                                    {{ user.username|slice:":2" }}
+                                </div>
+                                {% endif %}
+                            </a>
+
+                        <!-- Logout Button -->
+                        <a href="{% url 'accounts:logout' %}" class="bg-gradient-to-r from-red-500 to-pink-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-red-600 hover:to-pink-700 transition">
+                            Logout
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="text-white-300 hover:text-white transition duration-200 font-medium">Login</a>
+                        <a href="{% url 'accounts:register' %}" class="bg-white text-black px-4 py-2 rounded-lg text-sm font-medium border border-gray-300 hover:bg-gray-100 transition">
+                            Register
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="md:hidden bg-black/90 p-4 space-y-2 text-center">
+            <a href="{% url 'core:home' %}" class="block py-2 hover:text-pink-400">Home</a>
+            <a href="{% url 'core:explore' %}" class="block py-2 hover:text-purple-400">Dishcovery</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'core:explore' %}?tab=saved" class="block py-2 hover:text-yellow-400">Saved and Savoured</a>
+                <a href="{% url 'core:explore' %}?tab=recommendation" class="block py-2 hover:text-green-400">Recommendation</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Konten Utama -->
+    <div class="pt-24 pb-10 px-6">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 p-4 rounded-lg text-center 
+                    {% if message.tags == 'error' %}bg-red-900/50 text-red-200
+                    {% elif message.tags == 'success' %}bg-green-900/50 text-green-200
+                    {% else %}bg-blue-900/50 text-blue-200{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-auto py-6 text-center text-gray-500 text-sm">
+        &copy; 2025 Peek & Map. A peek at reviews, a map to good food.
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
