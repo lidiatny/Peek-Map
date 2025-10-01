@@ -1,0 +1,101 @@
+resto_id,resto_name,type,city,keywords,longitude,latitude,price_range,list menu,review_count
+"0,Wingheng,Chinese,West Jakarta,,-62.391.907,1.067.906.805,35000-50000,""mie paikut babi, dimsum"",1"
+1,Sinar Mandala Restoran,Chinese,South Jakarta,,,,N/A,,
+2,RM Cahaya Selatan,Chinese,South Jakarta,,,,50,,
+3,Bubur Ting Hao,Chinese,South Jakarta,,,,75,,
+4,Mandala Baru,Chinese,South Jakarta,,,,N/A,,
+5,Suck My Duck,Chinese,South Jakarta,,,,N/A,,
+6,THREE UNCLES Prapanca,Chinese,South Jakarta,,,,N/A,,
+7,168 Restaurant & Katering,Chinese,South Jakarta,,,,N/A,,
+8,Restoran Tjahaja Abadi,Chinese,South Jakarta,,,,100,,
+9,Dimsum Pertok,Chinese,South Jakarta,,,,75,,
+10,HAKA Dimsum Blok M,Chinese,South Jakarta,,,,75,,
+11,Okuzono Japanese Dining,Japanese,South Jakarta,,,,,,
+12,Yakiniku Great Jakarta,Japanese,South Jakarta,,,,,,
+13,Wasai Japanese Dining,Japanese,South Jakarta,,,,,,
+14,Fūjin Izakaya ,Japanese,South Jakarta,,,,,,
+15,Kintaro Sushi Senopati,Japanese,South Jakarta,,,,,,
+16,3 Wise Monkeys,Japanese,South Jakarta,,,,,,
+17,Sushi Hiro Hang Tuah Jakarta,Japanese,South Jakarta,,,,,,
+18,Hiyoko,Japanese,South Jakarta,,,,,,
+19,Shabu Shiro,Japanese,South Jakarta,,,,,,
+20,Shikaku Japanese Restaurant Jakarta,Japanese,South Jakarta,,,,,,
+21,Yawara Private Dining,Japanese,South Jakarta,,,,,,
+22,William's,Western,South Jakarta,,,,,,
+23,Le Quartier,Western,South Jakarta,,,,,,
+24,MANZO Jakarta,Western,South Jakarta,,,,,,
+25,Txoko Jakarta,Western,South Jakarta,,,,,,
+26,PENN JAKARTA,Western,South Jakarta,,,,,,
+27,Sofia at The Gunawarman,Western,South Jakarta,,,,,,
+28,Milou Farm House,Western,South Jakarta,,,,,,
+29,Loewy,Western,South Jakarta,,,,,,
+30,Fukumaru Japanese Restaurant,Japanese,North Jakarta,,,,,,
+31,Hotaru Deli Japanese Premium Bento,Japanese,North Jakarta,,,,,,
+32,Yakiniku Like Mall of Indonesia,Japanese,North Jakarta,,,,,,
+"33,""Gion The Sushi Bar, Mall Of Indonesia"",Japanese,North Jakarta,,,,,,"
+34,Yakiniku Like Mall of Indonesia,Japanese,North Jakarta,,,,,,
+35,IPPEKE KOMACHI,Japanese,North Jakarta,,,,,,
+36,Sushi Go! EMPORIUM PLUIT MALL,Japanese,North Jakarta,,,,,,
+37,Sushi Hiro Kelapa Gading,Japanese,North Jakarta,,,,,,
+38,Shaburi Grand Indonesia,Japanese,North Jakarta,,,,,,
+39,Ramen Seirock-Ya Jepang Mall Kelapa Gading 2,Japanese,North Jakarta,,,,75000-100000,,
+40,Furusato Izakaya,Japanese,North Jakarta,,,,,,
+41,Famili Ria ,Chinese,North Jakarta,,,,,,
+42,Hawaii Restaurant Sunter,Chinese,North Jakarta,,,,,,
+43,Restaurant Chung Hua,Chinese,North Jakarta,,,,,,
+44,A Hwuat,Chinese,North Jakarta,,,,,,
+45,Angke Restaurant & Function Hall,Chinese,North Jakarta,,,,,,
+46,New Cahaya Lestari,Chinese,North Jakarta,,,,,,
+47,A Hwa,Chinese,North Jakarta,,,,,,
+48,Foek Lam,Chinese,North Jakarta,,,,,,
+"49,""Semesta by Remboelan, SCBD"",Indonesian,South Jakarta,,,,,,"
+50,Batik Kuring,Indonesian,South Jakarta,,,,,,
+"51,""Warsol (Warung Solo), Meruya"",Indonesian,East Jakarta,,,,,,"
+"52,""Vong Kitchen, SCBD"",Western,South Jakarta,,,,,,"
+"53,""Rempah Bistro, Pasific Place"",Indonesian,South Jakarta,,,,,,"
+"54,""Warteg Tisha, Senopati"",Indonesian,South Jakarta,,,,,,"
+"55,""Sarang Oci, Kebon Jeruk"",Indonesian,West Jakarta,,,,,,"
+56,Lumpang Emas - Wijaya II,Indonesian,South Jakarta,,,,,,
+57,Begor Pondok Suryo,Indonesian,South Jakarta,,,,,,
+58,PA.SO.LA Restaurant,Buffet,South Jakarta,,,,,,
+"59,""Sate Madura Awie, Senopati"",Indonesian,South Jakarta,,,,40000-100000,,"
+"60,""The Garden Osteria, Senopati"",Western,South Jakarta,,,,,,"
+61,A&W Restoran - Rawamangun,Western,East Jakarta,,,,,,
+62,Wendy's Pacific Place,Western,South Jakarta,,,,,,
+63,Burger King Pemuda,Western,East Jakarta,,,,,,
+64,Burgreens Express - Pacific Place,Western,South Jakarta,,,,,,
+65,KFC Pondok Bambu,Western,East Jakarta,,,,,,
+66,SUBWAY - Rawamangun,Western,East Jakarta,,,,,,
+"67,""Taco Bell, Artha Gading"",Western,North Jakarta,,,,,,"
+68,McDonald's Pahlawan Revolusi,Western,East Jakarta,,,,,,
+69,KFC Otista,Western,East Jakarta,,,,,,
+70,KFC Jatinegara City Plaza,Western,East Jakarta,,,,,,
+71,Burger king Pemuda,Western,East Jakarta,,,,,,
+72,HokBen kitchen Otista,Western,East Jakarta,,,,,,
+73,Richeese Factory Pahlawan Revolusi,Western,East Jakarta,,,,,,
+74,KFC Ciracas,Western,East Jakarta,,,,,,
+75,KFC Bandara Halim Perdana Kusuma,Western,East Jakarta,,,,,,
+76,Republic Kebab Premium - Pisangan Baru,Eastern,East Jakarta,,,,,,
+77,KFC Kemang,Western,South Jakarta,,,,,,
+"78,""Subshack Pemuda, Rawamangun"",Western,East Jakarta,,,,,,"
+79,KFC - Rawamangun Square,Western,East Jakarta,,,,,,
+80,Richeese Factory Kalimalang,Western,East Jakarta,,,,,,
+81,Asinan Betawi H.Mansyur Kamboja,Indonesian,East Jakarta,,,,,,
+82,Warung Taburai - Jakarta Timur,Indonesian,East Jakarta,,,,,,
+"83,""Ibu Bandung, Masakan Khas Sunda, Jatinegara"",Indonesian,East Jakarta,,,,,,"
+"84,""Sambal Bakar Indonesia, Duren Sawit"",Indonesian,East Jakarta,,,,,,"
+85,Warung Belut Khas Surabaya Rawamangun,Indonesian,East Jakarta,,,,,,
+"86,""NASI GANDUL PAKDE , Buaran, Duren Sawit Jakarta Timur ( sebrang Bank PANIN Buaran )"",Indonesian,East Jakarta,,,,,,"
+87,Kedai Kayumanis,Indonesian,East Jakarta,,,,,,
+"88,""Rumah Makan Marannu, Cawang"",Indonesian,East Jakarta,,,,,,"
+89,Bebek Sakera Reborn,Indonesian,East Jakarta,,,,,,
+90,ROPISBAK GHIFARI Balai Pustaka Rawamangun,Indonesian,East Jakarta,,,,,,
+"91,""Makanan Khas Madura, Cipulir"",Indonesian,East Jakarta,,,,,,"
+"92,""Lesehan Jawa Timur, Condet"",Indonesian,East Jakarta,,,,,,"
+93,Warung Jawa Timur 1989,Indonesian,East Jakarta,,,,,,
+94,Rumah Makan Betawi Hj. Dahlia,Indonesian,East Jakarta,,,,,,
+95,Warung Mak Dower,Indonesian,East Jakarta,,,,,,
+96,Abunawas Restaurant - Matraman,Indonesian,East Jakarta,,,,,,
+"97,""Ayam Betutu Khas Gilimanuk Bali, Rawamangun"",Indonesian,East Jakarta,,,,,,"
+"98,""Il Forno Pizzeria, Blok M"",Western,South Jakarta,,,,,,"
+99,Nonna Bona,Western,South Jakarta,,,,,,

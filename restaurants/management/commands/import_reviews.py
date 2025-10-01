@@ -1,87 +1,108 @@
-import csv
-import os
+import csv, os
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from restaurants.models import Restaurant
 from reviews.models import Review
+from django.conf import settings
+
+def open_csv(path):
+    import csv
+    f = open(path, 'r', encoding='utf-8-sig', newline='')
+    sample = f.read(4096)
+    f.seek(0)
+    try:
+        dialect = csv.Sniffer().sniff(sample, delimiters=',;')
+    except Exception:
+        dialect = csv.excel
+    return f, dialect
 
 class Command(BaseCommand):
-    help = 'Import reviews from a CSV file'
+    help = 'Import reviews from data/reviews.csv (support restaurant_id or restaurant_name).'
 
     def add_arguments(self, parser):
-        parser.add_argument("file_path", type=str, help="Path to the reviews CSV file")
+        parser.add_argument("--file", type=str, default=None,
+                            help="Path to reviews CSV. Default: data/reviews.csv")
 
     def handle(self, *args, **options):
-        from django.conf import settings
-        reviews_file = os.path.join(settings.BASE_DIR, "data", "reviews.csv")
-        
-        if not os.path.exists(reviews_file):
-            print(f"File {reviews_file} not found!")
+        reviews_path = options["file"] or os.path.join(settings.BASE_DIR, "data", "reviews.csv")
+        if not os.path.exists(reviews_path):
+            self.stdout.write(self.style.ERROR(f"File not found: {reviews_path}"))
             return
-        
-        # Create sample users (user1 - user20)
+
+        restaurants = list(Restaurant.objects.all().order_by("id"))
+        if not restaurants:
+            self.stdout.write(self.style.ERROR("No restaurants found! Import restaurants first."))
+            return
+
+        # map name -> object dan index -> object (1-based)
+        name_map = {r.name.strip().lower(): r for r in restaurants if r.name}
+        index_map = {i+1: r for i, r in enumerate(restaurants)}
+
+        # ensure sample users user1..user20
         users = []
         for i in range(1, 21):
-            user, created = User.objects.get_or_create(
-                username=f'user{i}',
-                defaults={
-                    'email': f'user{i}@example.com',
-                    'first_name': 'User',
-                    'last_name': str(i)
-                }
-            )
-            users.append(user)
-            if created:
-                print(f"Created user: user{i}")
-        
-        restaurants = list(Restaurant.objects.all())
-        if not restaurants:
-            print("No restaurants found! Please import restaurants first.")
-            return
-        
-        imported_count = 0
-        
-        with open(reviews_file, 'r', encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
+            u, _ = User.objects.get_or_create(username=f"user{i}", defaults={"email": f"user{i}@example.com"})
+            users.append(u)
+
+        f, dialect = open_csv(reviews_path)
+        reader = csv.DictReader(f, dialect=dialect)
+
+        imported, skipped = 0, 0
+
+        for row in reader:
+            # user
+            try:
+                # pakai user_id kalau ada, jika tidak: sebar round-robin
+                uid = row.get("user_id", "").strip()
+                if uid:
+                    uid_i = int(float(uid))
+                    user = users[(uid_i - 1) % len(users)]
+                else:
+                    # deterministic: pakai hash review_text
+                    h = abs(hash(row.get("review_text",""))) % len(users)
+                    user = users[h]
+            except Exception:
+                user = users[0]
+
+            # restaurant
+            restaurant = None
+            rid = (row.get("restaurant_id") or "").strip()
+            rname = (row.get("restaurant_name") or "").strip().lower()
+
+            if rid:
                 try:
-                    # Get user
-                    user_id = int(row['user_id']) - 1
-                    if user_id >= len(users):
-                        user_id = user_id % len(users)
-                    user = users[user_id]
-                    
-                    # Get restaurant
-                    restaurant_id = int(row['restaurant_id']) - 1
-                    if restaurant_id >= len(restaurants):
-                        restaurant_id = restaurant_id % len(restaurants)
-                    restaurant = restaurants[restaurant_id]
-                    
-                    # Parse rating
-                    rating = int(float(row['rating']))
-                    rating = max(1, min(5, rating))
-                    
-                    # Check unique constraint (only one review per user per restaurant)
-                    if Review.objects.filter(user=user, restaurant=restaurant).exists():
-                        continue
-                    
-                    # Create review
-                    Review.objects.create(
-                        restaurant=restaurant,
-                        user=user,
-                        rating=rating,
-                        comment=row['review_text'] or '',
-                    )
-                    
-                    imported_count += 1
-                    if imported_count % 100 == 0:
-                        print(f"Imported {imported_count} reviews...")
-                        
-                except Exception as e:
-                    print(f"Error importing review: {str(e)}")
-                    continue
-        
-        print(f"✅ Successfully imported {imported_count} reviews!")
-        print(f"📌 Total restaurants: {Restaurant.objects.count()}")
-        print(f"📌 Total reviews: {Review.objects.count()}")
-        print(f"📌 Total users: {User.objects.count()}")
+                    restaurant = index_map[int(float(rid))]
+                except Exception:
+                    restaurant = None
+            if not restaurant and rname:
+                restaurant = name_map.get(rname)
+
+            if not restaurant:
+                skipped += 1
+                continue
+
+            # rating
+            try:
+                rating = int(float(row.get("rating", 0)))
+            except Exception:
+                rating = 0
+            rating = max(1, min(5, rating)) if rating else 3
+
+            comment = row.get("review_text") or row.get("comment") or ""
+            # unique_together guard
+            if Review.objects.filter(user=user, restaurant=restaurant).exists():
+                skipped += 1
+                continue
+
+            Review.objects.create(
+                user=user,
+                restaurant=restaurant,
+                rating=rating,
+                comment=comment[:2000],
+            )
+            imported += 1
+
+        f.close()
+        self.stdout.write(self.style.SUCCESS(
+            f"Reviews → imported: {imported}, skipped (dupe/unmatched): {skipped}"
+        ))

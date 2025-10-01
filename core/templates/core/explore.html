@@ -1,5 +1,6 @@
 <!-- core/templates/core/explore.html -->
 {% extends 'accounts/base.html' %}
+{% load static %}
 
 {% block title %}Dishcover{% endblock %}
 
@@ -50,12 +51,11 @@
             <div class="bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
                 data-aos="fade-up">
                 {% if resto.photo %}
-                <img src="{{ resto.photo.url }}" alt="{{ resto.name }}" class="w-full h-48 object-cover">
-                {% else %}
-                <div class="w-full h-48 bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center">
-                    <span class="text-gray-700 text-2xl font-bold">No Photo</span>
-                </div>
-                {% endif %}
+                <img src="{{ resto.photo.url }}" alt="{{ resto.name }}" class="w-full h-40 object-cover rounded-t-xl">
+            {% else %}
+  <img src="{% static 'img/placeholder_resto.svg' %}" alt="No photo" class="w-full h-40 object-cover rounded-t-xl">
+{% endif %}
+
 
                 <div class="p-5" style="background-color: #b04c4c">
                     <h3 class="text-xl font-bold text-white">{{ resto.name }}</h3>

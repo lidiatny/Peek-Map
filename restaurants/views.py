@@ -1,5 +1,6 @@
 # restaurants/views.py
 from django.shortcuts import render, get_object_or_404
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Avg, Count
 from restaurants.models import Restaurant, Menu
 from reviews.models import Review
@@ -20,7 +21,22 @@ def restaurant_detail(request, restaurant_id):
     menus = Menu.objects.filter(restaurant=restaurant)
 
     # Daftar review
-    reviews = Review.objects.filter(restaurant=restaurant).select_related('user').order_by('-created_at')
+    reviews_qs = Review.objects.filter(restaurant=restaurant).select_related('user').order_by('-created_at')
+    paginator = Paginator(reviews_qs, 10)  # 10 reviews per page
+    page_number = request.GET.get('page')
+    try:
+        reviews = paginator.page(page_number)
+    except PageNotAnInteger:
+        reviews = paginator.page(1)
+    except EmptyPage:
+        reviews = paginator.page(paginator.num_pages)
+
+    #Window nomor halaman untuk template
+    current_page = reviews.number
+    last_page = paginator.num_pages
+    start = max(current_page - 2, 1)
+    end = min(current_page + 2, last_page) + 1
+    page_range = range(start, end)
 
     # Cek apakah user sudah bookmark
     is_bookmarked = False
@@ -28,11 +44,18 @@ def restaurant_detail(request, restaurant_id):
         from accounts.models import Bookmark
         is_bookmarked = Bookmark.objects.filter(user=request.user, restaurant=restaurant).exists()
 
+    # Data restoran untuk peta
+    has_lat = restaurant.latitude is not None
+    has_lng = restaurant.longitude is not None
+    has_coordinate = (has_lat and has_lng)
+
+
     restaurant_data = {
-    'name': str(restaurant.name),
-    'address': str(restaurant.address),
-    'lat': float(restaurant.latitude),
-    'lng': float(restaurant.longitude),
+        'id': restaurant.id,
+        'name': str(restaurant.name),
+        'address': str(restaurant.address),
+        'lat': float(restaurant.latitude) if has_lat else None,
+        'lng': float(restaurant.longitude) if has_lng else None,
     }
 
     context = {
@@ -43,5 +66,6 @@ def restaurant_detail(request, restaurant_id):
         'reviews': reviews,
         'is_bookmarked': is_bookmarked,
         'restaurant_data': restaurant_data,  # 👈 Tambah ini
+        'has_coordinate': has_coordinate,
     }
     return render(request, 'restaurants/detail.html', context)
