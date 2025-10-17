@@ -3,7 +3,7 @@ from .models import Restaurant, Menu
 
 @admin.register(Restaurant)
 class RestaurantAdmin(admin.ModelAdmin):
-    list_display = ('name', 'address', 'latitude', 'longitude', 'average_rating')
+    list_display = ('id', 'name', 'address', 'latitude', 'longitude', 'average_rating')
     search_fields = ('name', 'address')
     list_filter = ('created_at',)
     ordering = ('-created_at',)

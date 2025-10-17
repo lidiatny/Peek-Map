@@ -17,7 +17,7 @@ class Review(models.Model):
         db_table = 'review'
         verbose_name = 'Review'
         verbose_name_plural = 'Reviews'
-        unique_together = ('user', 'restaurant')  # Hanya 1 review per user per resto
+    pass
 
 
 class ReviewReply(models.Model):

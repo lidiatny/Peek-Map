@@ -1,83 +1,111 @@
-# restaurants/management/commands/import_restos.py
-import csv
+import os, math, csv, json
 from django.core.management.base import BaseCommand
+from django.db import transaction
+from django.conf import settings
 from restaurants.models import Restaurant
 
-def open_csv(path):
-    # handle BOM & delimiter ; or ,
-    f = open(path, 'r', encoding='utf-8-sig', newline='')
-    sample = f.read(4096)
-    f.seek(0)
+def read_table(path):
+    import pandas as pd
+    ext = os.path.splitext(path)[1].lower()
+    if ext in [".xlsx", ".xls"]:
+        return pd.read_excel(path)
+    # CSV fallback (kalau terpaksa)
+    for enc in ["utf-8-sig", "utf-8", "latin-1"]:
+        for sep in [None, ",", ";", "\t", "|"]:
+            try:
+                df = pd.read_csv(path, encoding=enc, sep=sep, engine="python",
+                                 on_bad_lines="skip", quoting=csv.QUOTE_MINIMAL)
+                if len(df) > 0 and len(df.columns) >= 2:
+                    return df
+            except Exception:
+                continue
+    raise RuntimeError("Gagal membaca file Restaurants. Pakai .xlsx agar aman ya 🙏")
+
+def to_float(x):
     try:
-        dialect = csv.Sniffer().sniff(sample, delimiters=',;')
+        if x is None or (isinstance(x, float) and math.isnan(x)):
+            return None
+        return float(str(x).strip().replace(",", "."))
     except Exception:
-        dialect = csv.excel
-    return f, dialect
+        return None
+
+def pick(cols, *cands):
+    low = {str(c).lower().strip(): c for c in cols}
+    for c in cands:
+        if c in low: return low[c]
+    return None
+
+def clean_text(s):
+    if s is None: return ""
+    s = str(s).replace('""', '"').strip()
+    return s if s != "-" else ""
 
 class Command(BaseCommand):
-    help = "Import restaurants from a CSV file (idempotent)."
+    help = "Import/overwrite Restaurants dari CSV/Excel + tulis mapping resto_id→db_id ke data/_resto_id_map.json"
 
     def add_arguments(self, parser):
-        parser.add_argument("csv_file", type=str, help="Path to CSV file")
+        parser.add_argument("--file", required=True, help="Path ke Restaurants.xlsx/.csv")
+        parser.add_argument("--truncate", action="store_true", help="Hapus semua Restaurant sebelum import")
 
-    def handle(self, *args, **options):
-        path = options["csv_file"]
-        f, dialect = open_csv(path)
-        reader = csv.DictReader(f, dialect=dialect)
+    @transaction.atomic
+    def handle(self, *args, **opts):
+        path = opts["file"]
+        if not os.path.exists(path):
+            self.stderr.write(self.style.ERROR(f"File not found: {path}"))
+            return
 
-        created, updated, skipped = 0, 0, 0
+        if opts["truncate"]:
+            self.stdout.write(self.style.WARNING("Truncating Restaurant table..."))
+            Restaurant.objects.all().delete()
 
-        for row in reader:
-            # map fleksibel
-            name = (row.get("name") or row.get("resto_name") or "").strip()
+        df = read_table(path)
+        cols = df.columns
+
+        # kolom umum di dataset kamu
+        restoid_col = pick(cols, "resto_id", "restaurant_id", "id")
+        name_col    = pick(cols, "resto_name", "name", "restaurant_name")
+        addr_col    = pick(cols, "address", "alamat", "city", "kota")
+        lat_col     = pick(cols, "latitude", "lat")
+        lng_col     = pick(cols, "longitude", "lng", "long")
+        rate_col    = pick(cols, "rating", "average_rating", "rating rata-rata", "rating_rata-rata")
+
+        if not name_col:
+            raise SystemExit("Kolom nama restoran tidak ditemukan (cari: resto_name/name/restaurant_name).")
+
+        mapping = {}  # resto_id (file) -> Restaurant.id (DB)
+        created = 0
+
+        for _, row in df.iterrows():
+            name = clean_text(row.get(name_col))
             if not name:
-                self.stdout.write(self.style.WARNING(f"Skip: name kosong pada row {row}"))
-                skipped += 1
                 continue
 
-            # kolom opsional
-            address = (row.get("address") or "").strip()
-            lat_raw = (row.get("latitude") or "").strip()
-            lng_raw = (row.get("longitude") or row.get("langitude") or "").strip()
-            rating_raw = (row.get("rating") or "").strip()
-            description = (row.get("description") or row.get("keywords") or "").strip()
+            address = clean_text(row.get(addr_col)) if addr_col else ""
+            lat = to_float(row.get(lat_col)) if lat_col else None
+            lng = to_float(row.get(lng_col)) if lng_col else None
+            rating = to_float(row.get(rate_col)) if rate_col else None
 
-            def to_float(x):
-                if not x:
-                    return None
-                try:
-                    return float(x)
-                except ValueError:
-                    # handle format " -6.2" atau " -6200000" (gaya scrapper)
-                    x2 = x.replace('.', '')
-                    try:
-                        return float(x2) / 1_000_000
-                    except Exception:
-                        return None
+            r = Restaurant(name=name)
+            if hasattr(r, "address"):   r.address = address
+            if hasattr(r, "latitude"):  r.latitude = lat
+            if hasattr(r, "longitude"): r.longitude = lng
+            if rating is not None and hasattr(r, "average_rating"):
+                r.average_rating = rating
 
-            latitude = to_float(lat_raw)
-            longitude = to_float(lng_raw)
-            try:
-                rating = float(rating_raw) if rating_raw else None
-            except Exception:
-                rating = None
+            r.save()
+            created += 1
 
-            obj, created_flag = Restaurant.objects.update_or_create(
-                name=name,
-                defaults={
-                    "address": address,
-                    "latitude": latitude,
-                    "longitude": longitude,
-                    "rating": rating,
-                    "description": description,
-                }
-            )
-            if created_flag:
-                created += 1
-            else:
-                updated += 1
+            # simpan mapping resto_id -> db_id jika kolomnya ada
+            if restoid_col:
+                file_rid = row.get(restoid_col)
+                if file_rid not in [None, ""]:
+                    mapping[str(int(float(file_rid)))] = r.id  # normalisasi ke string int
 
-        f.close()
-        self.stdout.write(self.style.SUCCESS(
-            f"Restaurants → created: {created}, updated: {updated}, skipped (no name): {skipped}"
-        ))
+        # tulis mapping ke data/_resto_id_map.json
+        map_path = os.path.join(settings.BASE_DIR, "data", "_resto_id_map.json")
+        os.makedirs(os.path.dirname(map_path), exist_ok=True)
+        with open(map_path, "w", encoding="utf-8") as f:
+            json.dump(mapping, f, ensure_ascii=False, indent=2)
+
+        self.stdout.write(self.style.SUCCESS(f"Restaurants imported: {created}"))
+        self.stdout.write(self.style.SUCCESS(f"Mapping saved: {map_path} (keys={len(mapping)})"))
