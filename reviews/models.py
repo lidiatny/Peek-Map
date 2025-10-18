@@ -4,9 +4,9 @@ from restaurants.models import Restaurant
 
 class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
-    rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])  # 1 to 5 stars
-    comment = models.TextField()
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='reviews')
+    rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)], null=True, blank=True)
+    comment = models.TextField(null=True, blank=True)
     photo = models.ImageField(upload_to='review_photos/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

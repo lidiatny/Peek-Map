@@ -36,7 +36,7 @@ def home(request):
         if min_rating:
             resto_results = (
                 resto_results
-                .annotate(rating_avg=Coalesce(Avg('review__rating'), 0.0))
+                .annotate(rating_avg=Coalesce(Avg('reviews__rating'), 0.0))
                 .filter(rating_avg__gte=float(min_rating))
             )
     else:
@@ -47,7 +47,7 @@ def home(request):
 
     top_rated = (
         Restaurant.objects
-        .annotate(rating_avg=Coalesce(Avg('review__rating'), 0.0))
+        .annotate(rating_avg=Coalesce(Avg('reviews__rating'), 0.0))
         .filter(rating_avg__gt=0)  # hanya yg punya rating
         .order_by('-rating_avg')[:5]
     )
@@ -98,22 +98,35 @@ def explore(request):
         )
 
     if tab == 'recommendation' and request.user.is_authenticated:
-        # rekomendasi personal
-        context['restaurants'] = simple_recommendation(request.user)
+        # simple_recommendation mungkin balikin list/qs tanpa annotate.
+        base = simple_recommendation(request.user)
+        ids = [r.id for r in base]             # aman untuk list/qs
+        context['restaurants'] = (
+            Restaurant.objects.filter(id__in=ids)
+            .annotate(
+                rating_avg=Coalesce(Avg('reviews__rating'), 0.0),
+                reviews_cnt=Count('reviews', distinct=True)
+            )
+        )
 
     elif tab == 'top_rated':
         context['restaurants'] = (
             Restaurant.objects
-            .annotate(rating_avg=Coalesce(Avg('review__rating'), 0.0))
+            .annotate(
+                rating_avg=Coalesce(Avg('reviews__rating'), 0.0),
+                reviews_cnt=Count('reviews', distinct=True)
+            )
             .filter(rating_avg__gt=0)
             .order_by('-rating_avg')[:20]
         )
 
     elif tab == 'near_you':
-        # (sementara acak; nanti bisa diganti jarak)
         context['restaurants'] = (
             Restaurant.objects
-            .annotate(rating_avg=Coalesce(Avg('review__rating'), 0.0))
+            .annotate(
+                rating_avg=Coalesce(Avg('reviews__rating'), 0.0),
+                reviews_cnt=Count('reviews', distinct=True)
+            )
             .order_by('?')[:20]
         )
 
@@ -121,37 +134,29 @@ def explore(request):
         qs = (
             Restaurant.objects
             .annotate(
-                rating_avg=Coalesce(Avg('review__rating'), 0.0),
-                # JANGAN annotate "review_count" karena itu field asli di model!
-                reviews_cnt=Count('review', distinct=True)
+                rating_avg=Coalesce(Avg('reviews__rating'), 0.0),
+                # jangan pakai nama field asli kalau kamu memang punya field review_count di model
+                reviews_cnt=Count('reviews', distinct=True)
             )
             .order_by('name')
         )
-
         paginator = Paginator(qs, 12)
         page = request.GET.get('page', 1)
-
         try:
             restaurants_page = paginator.page(page)
         except PageNotAnInteger:
             restaurants_page = paginator.page(1)
         except EmptyPage:
             restaurants_page = paginator.page(paginator.num_pages)
-
         context['restaurants'] = restaurants_page
 
     elif tab == 'saved' and request.user.is_authenticated:
         bookmarks = Bookmark.objects.filter(user=request.user).select_related('restaurant')
         restos = [b.restaurant for b in bookmarks]
-
-        # hitung rating_avg ringan tanpa menimpa field 'review_count'
         for r in restos:
-            reviews = r.review_set.all()
-            if reviews:
-                r.rating_avg = round(sum((rv.rating or 0) for rv in reviews) / len(reviews), 1)
-            else:
-                r.rating_avg = 0.0
-
+            reviews = r.reviews_set.all()   # kalau kamu pakai related_name='reviews', ganti ke r.reviews.all()
+            r.reviews_cnt = reviews.count()
+            r.rating_avg = round(sum((rv.rating or 0) for rv in reviews) / len(reviews), 1) if reviews else 0.0
         context['restaurants'] = restos
 
     return render(request, 'core/explore.html', context)

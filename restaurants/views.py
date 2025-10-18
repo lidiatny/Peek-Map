@@ -7,6 +7,18 @@ from reviews.models import Review
 from django.db.models import Count
 from core.utils import track_user_activity
 
+def explore(request):
+    qs = (
+        Restaurant.objects.all()
+        .annotate(
+            review_count=Count('reviews', distinct=True),      # pakai 'reviews' sesuai related_name
+            avg_rating=Avg('reviews__rating')                  # opsional kalau mau rata-rata
+        )
+    )
+    context = { "restaurants": qs }
+    return render(request, "restaurants/explore.html", context)
+
+
 def restaurant_detail(request, restaurant_id):
     restaurant = get_object_or_404(Restaurant, id=restaurant_id)
 

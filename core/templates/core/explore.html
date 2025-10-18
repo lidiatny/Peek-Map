@@ -16,7 +16,7 @@
         <div class="flex flex-wrap justify-center mb-8 border-b border-gray-700">
             <!-- All Restaurant -->
             <a href="?tab=all"
-                class="px-6 py-3 font-medium {% if tab == 'all_restaurants' %}text-red-400 border-b-2 border-red-400{% else %}text-gray-400 hover:text-red-300{% endif %}">
++                class="px-6 py-3 font-medium {% if tab == 'all' %}text-red-400 border-b-2 border-red-400{% else %}text-gray-400 hover:text-red-300{% endif %}">
                 All Restaurants
             </a>
             
@@ -62,9 +62,14 @@
                     <p class="text-white text-sm mt-1">{{ resto.address|truncatechars:60 }}</p>
 
                     <div class="flex items-center mt-2">
-                        <span class="text-yellow-400">{{ resto.avg_rating|floatformat:"1" }} ⭐</span>
-                        <span class="text-white text-sm ml-2">({{ resto.review_count }} review)</span>
+                    <span class="text-yellow-400">
+                        {{ resto.rating_avg|default:0|floatformat:"1" }} ⭐
+                    </span>
+                    <span class="text-white text-sm ml-2">
+                        ({{ resto.reviews_cnt|default:0 }} review{{ resto.reviews_cnt|pluralize }})
+                    </span>
                     </div>
+
 
                     <!-- Bookmark Button -->
                     <div class="mt-4">

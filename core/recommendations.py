@@ -19,7 +19,7 @@ from accounts.models import Bookmark
 
 
 # UBAH ke "reviews" jika di model Review kamu pakai related_name='reviews'
-REVIEW_REL = "review"   # default reverse lookup untuk FK tanpa related_name
+REVIEW_REL = "reviews"   # default reverse lookup untuk FK tanpa related_name
 
 
 def _base_queryset() -> QuerySet:
