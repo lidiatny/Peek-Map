@@ -3,6 +3,9 @@ from django.shortcuts import render
 from django.db.models import Avg, Count
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+
+from django.db.models.functions import Coalesce
+
 from restaurants.models import Restaurant, Menu
 from reviews.models import Review
 from accounts.models import Bookmark
@@ -10,12 +13,13 @@ from accounts.models import Bookmark
 from .recommendations import simple_recommendation
 from .utils import track_user_activity, get_recently_viewed_restaurants
 
+
 def home(request):
     query = request.GET.get('q')
     category = request.GET.get('category')
     min_rating = request.GET.get('min_rating')
-    
-    # Initialize with all restaurants if any filter is applied
+
+    # === Search & filters ===
     if query or category or min_rating:
         if query:
             # Track search activity
@@ -25,31 +29,33 @@ def home(request):
         else:
             resto_results = Restaurant.objects.all()
             menu_results = Menu.objects.none()
-        
-        # Apply category filter
+
         if category:
             resto_results = resto_results.filter(description__icontains=category)
-        
-        # Apply rating filter
+
         if min_rating:
-            resto_results = resto_results.annotate(
-                avg_rating=Avg('review__rating')
-            ).filter(avg_rating__gte=float(min_rating))
-            
+            resto_results = (
+                resto_results
+                .annotate(rating_avg=Coalesce(Avg('review__rating'), 0.0))
+                .filter(rating_avg__gte=float(min_rating))
+            )
     else:
         resto_results = Restaurant.objects.none()
         menu_results = Menu.objects.none()
 
     restaurants_all = Restaurant.objects.all()
 
-    top_rated = Restaurant.objects.annotate(
-        avg_rating=Avg('review__rating')
-    ).filter(avg_rating__isnull=False).order_by('-avg_rating')[:5]
+    top_rated = (
+        Restaurant.objects
+        .annotate(rating_avg=Coalesce(Avg('review__rating'), 0.0))
+        .filter(rating_avg__gt=0)  # hanya yg punya rating
+        .order_by('-rating_avg')[:5]
+    )
 
-    # Get random reviews from different restaurants
+    # random recent reviews
     last_reviews = Review.objects.select_related('user', 'restaurant').order_by('?')[:5]
 
-    # ✅ Siapkan data sebagai list biasa (jangan json.dumps!)
+    # map data
     restaurants_data = []
     for resto in restaurants_all:
         try:
@@ -61,11 +67,8 @@ def home(request):
             })
         except (ValueError, TypeError, AttributeError):
             continue
-
-    # ✅ Jangan json.dumps() → biarkan |json_script yang handle
     restaurants_json = restaurants_data
-    
-    # Get recently viewed restaurants for logged in users
+
     recently_viewed = get_recently_viewed_restaurants(request.user) if request.user.is_authenticated else []
 
     context = {
@@ -84,6 +87,7 @@ def home(request):
     }
     return render(request, 'core/home.html', context)
 
+
 def explore(request):
     tab = request.GET.get('tab', 'recommendation')
     context = {'tab': tab}
@@ -94,26 +98,37 @@ def explore(request):
         )
 
     if tab == 'recommendation' and request.user.is_authenticated:
-        # 🔥 Gunakan sistem rekomendasi AI sederhana
+        # rekomendasi personal
         context['restaurants'] = simple_recommendation(request.user)
 
     elif tab == 'top_rated':
-        context['restaurants'] = Restaurant.objects.annotate(
-            avg_rating=Avg('review__rating')
-        ).filter(avg_rating__isnull=False).order_by('-avg_rating')[:20]
+        context['restaurants'] = (
+            Restaurant.objects
+            .annotate(rating_avg=Coalesce(Avg('review__rating'), 0.0))
+            .filter(rating_avg__gt=0)
+            .order_by('-rating_avg')[:20]
+        )
 
     elif tab == 'near_you':
-        context['restaurants'] = Restaurant.objects.annotate(
-            avg_rating=Avg('review__rating')
-        ).order_by('?')[:20]
+        # (sementara acak; nanti bisa diganti jarak)
+        context['restaurants'] = (
+            Restaurant.objects
+            .annotate(rating_avg=Coalesce(Avg('review__rating'), 0.0))
+            .order_by('?')[:20]
+        )
 
     elif tab == 'all':
-        qs = Restaurant.objects.annotate(
-            avg_rating=Avg('review__rating'),
-            review_count=Count('review')
-        ).order_by('name')
+        qs = (
+            Restaurant.objects
+            .annotate(
+                rating_avg=Coalesce(Avg('review__rating'), 0.0),
+                # JANGAN annotate "review_count" karena itu field asli di model!
+                reviews_cnt=Count('review', distinct=True)
+            )
+            .order_by('name')
+        )
 
-        paginator = Paginator(qs, 12)  # 12 per page
+        paginator = Paginator(qs, 12)
         page = request.GET.get('page', 1)
 
         try:
@@ -127,10 +142,16 @@ def explore(request):
 
     elif tab == 'saved' and request.user.is_authenticated:
         bookmarks = Bookmark.objects.filter(user=request.user).select_related('restaurant')
-        context['restaurants'] = [b.restaurant for b in bookmarks]
-        for resto in context['restaurants']:
-            reviews = resto.review_set.all()
-            resto.avg_rating = round(sum([r.rating for r in reviews]) / len(reviews), 1) if reviews else 0
-            resto.review_count = len(reviews)
+        restos = [b.restaurant for b in bookmarks]
+
+        # hitung rating_avg ringan tanpa menimpa field 'review_count'
+        for r in restos:
+            reviews = r.review_set.all()
+            if reviews:
+                r.rating_avg = round(sum((rv.rating or 0) for rv in reviews) / len(reviews), 1)
+            else:
+                r.rating_avg = 0.0
+
+        context['restaurants'] = restos
 
     return render(request, 'core/explore.html', context)

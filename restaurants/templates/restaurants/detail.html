@@ -5,18 +5,15 @@
 {% block title %}{{ restaurant.name }}{% endblock %}
 
 {% block extra_css %}
-<link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-  crossorigin=""
-/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <style>
   /* tabs */
   .tab-active {
     @apply bg-red-600 text-white;
     position: relative;
   }
+
   .tab-active::after {
     content: "";
     position: absolute;
@@ -27,14 +24,28 @@
     background: #fff;
     border-radius: 9999px;
   }
-  .tab-inactive { @apply text-gray-700 hover:bg-gray-100; }
+
+  .tab-inactive {
+    @apply text-gray-700 hover:bg-gray-100;
+  }
 
   /* rating summary bars + stars */
-  .bar-track { height: 8px; border-radius: 9999px; background: #e7f3ea; }
-  .bar-fill  { height: 8px; border-radius: 9999px; background: #166534; }
+  .bar-track {
+    height: 8px;
+    border-radius: 9999px;
+    background: #e7f3ea;
+  }
+
+  .bar-fill {
+    height: 8px;
+    border-radius: 9999px;
+    background: #166534;
+  }
 
   /* map min height */
-  #map { min-height: 16rem; }
+  #map {
+    min-height: 16rem;
+  }
 </style>
 {% endblock %}
 
@@ -43,8 +54,7 @@
 <section class="px-6 py-6">
   <div
     class="hero-bg {% if not restaurant.photo %}hero-bg-no-photo{% endif %} relative rounded-xl overflow-hidden shadow-lg"
-    {% if restaurant.photo %}style="background-image: url('{{ restaurant.photo.url }}');"{% endif %}
-  >
+    {% if restaurant.photo %}style="background-image: url('{{ restaurant.photo.url }}');" {% endif %}>
     <div class="absolute inset-0 bg-black bg-opacity-40"></div>
     <div class="relative px-6 py-8 text-white">
       <h1 class="text-3xl font-bold">{{ restaurant.name }}</h1>
@@ -55,11 +65,11 @@
         <span class="text-sm">{{ review_count }} reviews</span>
       </div>
       <p class="mt-1 text-sm flex items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
         {{ restaurant.address }}
       </p>
@@ -71,18 +81,13 @@
 <section class="px-6 py-8 rounded-lg max-w-5xl mx-auto">
   <h2 class="text-xl md:text-2xl font-bold text-red-700 mb-4">Peek the Location</h2>
   <div class="rounded-lg overflow-hidden shadow-md mb-4">
-    <div id="map"
-         class="w-full h-64"
-         data-lat="{{ restaurant.latitude }}"
-         data-lng="{{ restaurant.longitude }}"></div>
+    <div id="map" class="w-full h-64" data-lat="{{ restaurant.latitude }}" data-lng="{{ restaurant.longitude }}"></div>
   </div>
   <div class="flex justify-between items-center text-sm text-green-800 font-medium px-2">
     <p>{{ restaurant.address }}</p>
-    <a
-      href="https://www.google.com/maps/dir/?api=1&destination={{ restaurant.latitude }},{{ restaurant.longitude }}&destination_place_id={{ restaurant.name|urlencode }}"
+    <a href="https://www.google.com/maps/dir/?api=1&destination={{ restaurant.latitude }},{{ restaurant.longitude }}&destination_place_id={{ restaurant.name|urlencode }}"
       target="_blank"
-      class="bg-white border border-green-700 text-green-700 px-4 py-1 rounded hover:bg-gray-100 transition"
-    >
+      class="bg-white border border-green-700 text-green-700 px-4 py-1 rounded hover:bg-gray-100 transition">
       Get Direction
     </a>
   </div>
@@ -107,35 +112,37 @@
         {% for menu in menus %}
         <div class="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition">
           {% if menu.photo %}
-            <img src="{{ menu.photo.url }}" alt="{{ menu.name }}" class="w-full h-40 object-cover">
+          <img src="{{ menu.photo.url }}" alt="{{ menu.name }}" class="w-full h-40 object-cover">
           {% else %}
-            <div class="w-full h-40 bg-gradient-to-br from-red-100 to-orange-100 flex items-center justify-center text-gray-500 text-sm">
-              No Image
-            </div>
+          <div
+            class="w-full h-40 bg-gradient-to-br from-red-100 to-orange-100 flex items-center justify-center text-gray-500 text-sm">
+            No Image
+          </div>
           {% endif %}
           <div class="p-4 flex flex-col justify-between h-full">
             <div>
               <h5 class="text-lg font-semibold text-gray-900">{{ menu.name }}</h5>
               {% if menu.description %}
-                <p class="text-gray-600 text-sm mt-1">{{ menu.description }}</p>
+              <p class="text-gray-600 text-sm mt-1">{{ menu.description }}</p>
               {% endif %}
             </div>
             <div class="flex justify-between items-center mt-4">
               <p class="text-red-600 font-bold text-base">
                 {% if menu.price %}
-                  Rp {{ menu.price|floatformat:0 }}
+                Rp {{ menu.price|floatformat:0 }}
                 {% else %}
-                  <span class="text-gray-400 text-sm">No Price</span>
+                <span class="text-gray-400 text-sm">No Price</span>
                 {% endif %}
               </p>
-              <button class="like-btn text-2xl text-gray-400 hover:text-red-700 transition" data-menu-id="{{ menu.id }}" onclick="toggleLike(this)">♡</button>
+              <button class="like-btn text-2xl text-gray-400 hover:text-red-700 transition" data-menu-id="{{ menu.id }}"
+                onclick="toggleLike(this)">♡</button>
             </div>
           </div>
         </div>
         {% endfor %}
       </div>
       {% else %}
-        <p class="text-gray-500 text-center mt-6">Belum ada menu untuk restoran ini.</p>
+      <p class="text-gray-500 text-center mt-6">Belum ada menu untuk restoran ini.</p>
       {% endif %}
     </div>
 
@@ -150,9 +157,9 @@
             <div class="text-5xl font-bold text-green-800">{{ avg_rating|floatformat:"1" }}</div>
             <div class="text-green-800 text-xl">
               {% with full=avg_rating|floatformat:0|add:0 %}
-                {% for i in "12345"|make_list %}
-                  <span class="{% if forloop.counter <= full %}text-yellow-400{% else %}text-gray-300{% endif %}">★</span>
-                {% endfor %}
+              {% for i in "12345"|make_list %}
+              <span class="{% if forloop.counter <= full %}text-yellow-400{% else %}text-gray-300{% endif %}">★</span>
+              {% endfor %}
               {% endwith %}
             </div>
             <div class="text-sm text-gray-600 mt-1">{{ review_count }} Reviews</div>
@@ -160,289 +167,300 @@
 
           <!-- Histogram 5..1 -->
           <div class="md:col-span-2 space-y-2">
-            {% for _ in '12345'|make_list %}
-              {% with star=6|add:-forloop.counter
-                    p=rating_percents|get_item:star|default:0
-                    c=rating_counts|get_item:star|default:0 %}
-                <div class="flex items-center gap-3">
-                  <div class="w-8 text-right text-sm text-green-800 font-medium">{{ star }}★</div>
-                  <div class="flex-1 bar-track">
-                    <div class="bar-fill" style="width: {{ p }}%;"></div>
-                  </div>
-                  <div class="w-12 text-sm text-gray-600 text-right">{{ c }}</div>
+            {% for _ in "12345"|make_list %}
+              <div class="flex items-center gap-3">
+                <div class="w-8 text-right text-sm text-green-800 font-medium">
+                  {{ forloop.revcounter }}★
                 </div>
-              {% endwith %}
+                <div class="flex-1 bar-track">
+                  <div class="bar-fill"
+                      style="width: {{ rating_percents|get_item:forloop.revcounter|default:0 }}%;"></div>
+                </div>
+                <div class="w-12 text-sm text-gray-600 text-right">
+                  {{ rating_counts|get_item:forloop.revcounter|default:0 }}
+                </div>
+              </div>
             {% endfor %}
           </div>
 
-      <!-- Write Review Form -->
-      {% if user.is_authenticated %}
-      <div class="bg-white rounded-xl shadow p-4 mb-6">
-        <h4 class="font-bold mb-4">Write a Review</h4>
-        <form method="POST" action="{% url 'reviews:write_review' restaurant.id %}" enctype="multipart/form-data">
-          {% csrf_token %}
 
-          <!-- Rating Stars (klik mewarnai semua bintang sampai yang dipilih) -->
-          <div class="mb-4">
-            <label class="block text-sm font-medium mb-2 text-gray-900">Rating</label>
-            <div class="flex justify-center gap-1 py-2" id="rating-stars">
-              {% for i in '12345'|make_list %}
-                <span class="star-rating cursor-pointer text-3xl text-gray-300 hover:text-yellow-400 transition"
-                      data-rating="{{ forloop.counter }}">★</span>
-              {% endfor %}
-            </div>
-            <input type="hidden" name="rating" id="rating-input" required>
-          </div>
+          <!-- Write Review Form -->
+          {% if user.is_authenticated %}
+          <div class="bg-white rounded-xl shadow p-4 mb-6">
+            <h4 class="font-bold mb-4">Write a Review</h4>
+            <form method="POST" action="{% url 'reviews:write_review' restaurant.id %}" enctype="multipart/form-data">
+              {% csrf_token %}
 
-          <!-- Comment -->
-          <div class="mb-4">
-            <label class="block text-sm font-medium mb-2 text-gray-900">Comment</label>
-            <textarea name="comment" rows="4"
-              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900"
-              placeholder="Share your experience..." required></textarea>
-          </div>
-
-          <!-- Photo Upload -->
-          <div class="mb-4">
-            <label class="block text-sm font-medium mb-2 text-gray-900">Photo (Optional)</label>
-            <input type="file" name="photo" accept="image/*"
-                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900">
-            <p class="text-xs text-gray-500 mt-1">Upload a photo of your dining experience (JPG, PNG, max 5MB)</p>
-          </div>
-
-          <button type="submit"
-                  class="w-full bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition font-medium">
-            Submit Review
-          </button>
-        </form>
-      </div>
-      {% else %}
-      <div class="bg-gray-50 rounded-xl p-4 mb-6 text-center">
-        <p class="text-gray-600 mb-2">Want to write a review?</p>
-        <a href="{% url 'accounts:login' %}" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition inline-block">
-          Login to Review
-        </a>
-      </div>
-      {% endif %}
-
-      <!-- Reviews List -->
-      {% for review in reviews %}
-      <div class="bg-[#fff8f0] rounded-xl shadow p-4 mb-4">
-        <div class="flex items-center gap-3">
-          {% if review.user.profile and review.user.profile.photo %}
-            <img src="{{ review.user.profile.photo.url }}" alt="{{ review.user.username }}" class="w-10 h-10 rounded-full object-cover">
-          {% else %}
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center text-sm font-bold text-gray-700">
-              {{ review.user.username|slice:":1" }}
-            </div>
-          {% endif %}
-          <div>
-            <h4 class="font-semibold" style="color: black;">{{ review.user.username }}</h4>
-            <div class="flex items-center text-sm mt-1">
-              {% for i in '12345'|make_list %}
-                <span class="star {% if forloop.counter <= review.rating %}star{% else %}star-empty{% endif %}">
-                  {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
-                </span>
-              {% endfor %}
-            </div>
-          </div>
-          <span class="ml-auto text-sm text-red-600">{{ review.created_at|timesince }} ago</span>
-        </div>
-        <p class="mt-2 text-gray-800">{{ review.comment }}</p>
-
-        {% if review.photo %}
-        <div class="mt-3">
-          <img src="{{ review.photo.url }}" alt="Review photo" class="w-full max-w-md h-48 object-cover rounded-lg shadow-sm">
-        </div>
-        {% endif %}
-
-        {% for reply in review.replies.all %}
-        <div class="mt-3 ml-8 bg-gray-50 rounded-lg p-3 border-l-4 border-blue-500">
-          <div class="flex items-center gap-2">
-            {% if reply.user.profile and reply.user.profile.photo %}
-              <img src="{{ reply.user.profile.photo.url }}" alt="{{ reply.user.username }}" class="w-6 h-6 rounded-full object-cover">
-            {% else %}
-              <div class="w-6 h-6 rounded-full bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center text-xs text-gray-700 font-bold">
-                {{ reply.user.username|slice:":1" }}
+              <!-- Rating Stars (klik mewarnai semua bintang sampai yang dipilih) -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium mb-2 text-gray-900">Rating</label>
+                <div class="flex justify-center gap-1 py-2" id="rating-stars">
+                  {% for i in '12345'|make_list %}
+                  <span class="star-rating cursor-pointer text-3xl text-gray-300 hover:text-yellow-400 transition"
+                    data-rating="{{ forloop.counter }}">★</span>
+                  {% endfor %}
+                </div>
+                <input type="hidden" name="rating" id="rating-input" required>
               </div>
-            {% endif %}
-            <span class="font-semibold text-sm text-blue-700">{{ reply.user.username }}</span>
-            <span class="text-xs text-gray-500">{{ reply.created_at|timesince }} ago</span>
-          </div>
-          <p class="mt-1 text-sm text-gray-700">{{ reply.reply_text }}</p>
-        </div>
-        {% endfor %}
 
-        {% if user.is_authenticated %}
-        <div class="mt-3 ml-8">
-          <button onclick="toggleReplyForm({{ review.id }})" class="text-sm text-blue-600 hover:text-blue-800 font-medium">💬 Reply</button>
-          <form method="POST" action="{% url 'reviews:add_reply' review.id %}" id="reply-form-{{ review.id }}" class="hidden mt-2 bg-gray-50 rounded-lg p-3">
-            {% csrf_token %}
-            <textarea name="reply_text" placeholder="Write a reply..." class="w-full p-2 text-sm border border-gray-300 rounded resize-none text-gray-900" rows="2" required></textarea>
-            <div class="flex justify-end mt-2 space-x-2">
-              <button type="button" onclick="toggleReplyForm({{ review.id }})" class="px-3 py-1 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
-              <button type="submit" class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Reply</button>
+              <!-- Comment -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium mb-2 text-gray-900">Comment</label>
+                <textarea name="comment" rows="4"
+                  class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900"
+                  placeholder="Share your experience..." required></textarea>
+              </div>
+
+              <!-- Photo Upload -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium mb-2 text-gray-900">Photo (Optional)</label>
+                <input type="file" name="photo" accept="image/*"
+                  class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900">
+                <p class="text-xs text-gray-500 mt-1">Upload a photo of your dining experience (JPG, PNG, max 5MB)</p>
+              </div>
+
+              <button type="submit"
+                class="w-full bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition font-medium">
+                Submit Review
+              </button>
+            </form>
+          </div>
+          {% else %}
+          <div class="bg-gray-50 rounded-xl p-4 mb-6 text-center">
+            <p class="text-gray-600 mb-2">Want to write a review?</p>
+            <a href="{% url 'accounts:login' %}"
+              class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition inline-block">
+              Login to Review
+            </a>
+          </div>
+          {% endif %}
+
+          <!-- Reviews List -->
+          {% for review in reviews %}
+          <div class="bg-[#fff8f0] rounded-xl shadow p-4 mb-4">
+            <div class="flex items-center gap-3">
+              {% if review.user.profile and review.user.profile.photo %}
+              <img src="{{ review.user.profile.photo.url }}" alt="{{ review.user.username }}"
+                class="w-10 h-10 rounded-full object-cover">
+              {% else %}
+              <div
+                class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center text-sm font-bold text-gray-700">
+                {{ review.user.username|slice:":1" }}
+              </div>
+              {% endif %}
+              <div>
+                <h4 class="font-semibold" style="color: black;">{{ review.user.username }}</h4>
+                <div class="flex items-center text-sm mt-1">
+                  {% for i in '12345'|make_list %}
+                  <span class="star {% if forloop.counter <= review.rating %}star{% else %}star-empty{% endif %}">
+                    {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %} </span>
+                      {% endfor %}
+                </div>
+              </div>
+              <span class="ml-auto text-sm text-red-600">{{ review.created_at|timesince }} ago</span>
             </div>
-          </form>
-        </div>
-        {% endif %}
-      </div>
-      {% empty %}
-        <p class="text-gray-500">Belum ada ulasan.</p>
-      {% endfor %}
-    </div>
+            <p class="mt-2 text-gray-800">{{ review.comment }}</p>
 
-    <!-- Photos Tab -->
-    <div id="content-photos" class="hidden">
-      <h3 class="text-lg font-bold mb-4">Foto Restoran & Menu</h3>
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {% if restaurant.photo %}
-          <div class="rounded-lg overflow-hidden">
-            <img src="{{ restaurant.photo.url }}" alt="Resto Photo" class="w-full h-40 object-cover">
+            {% if review.photo %}
+            <div class="mt-3">
+              <img src="{{ review.photo.url }}" alt="Review photo"
+                class="w-full max-w-md h-48 object-cover rounded-lg shadow-sm">
+            </div>
+            {% endif %}
+
+            {% for reply in review.replies.all %}
+            <div class="mt-3 ml-8 bg-gray-50 rounded-lg p-3 border-l-4 border-blue-500">
+              <div class="flex items-center gap-2">
+                {% if reply.user.profile and reply.user.profile.photo %}
+                <img src="{{ reply.user.profile.photo.url }}" alt="{{ reply.user.username }}"
+                  class="w-6 h-6 rounded-full object-cover">
+                {% else %}
+                <div
+                  class="w-6 h-6 rounded-full bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center text-xs text-gray-700 font-bold">
+                  {{ reply.user.username|slice:":1" }}
+                </div>
+                {% endif %}
+                <span class="font-semibold text-sm text-blue-700">{{ reply.user.username }}</span>
+                <span class="text-xs text-gray-500">{{ reply.created_at|timesince }} ago</span>
+              </div>
+              <p class="mt-1 text-sm text-gray-700">{{ reply.reply_text }}</p>
+            </div>
+            {% endfor %}
+
+            {% if user.is_authenticated %}
+            <div class="mt-3 ml-8">
+              <button onclick="toggleReplyForm({{ review.id }})"
+                class="text-sm text-blue-600 hover:text-blue-800 font-medium">💬 Reply</button>
+              <form method="POST" action="{% url 'reviews:add_reply' review.id %}" id="reply-form-{{ review.id }}"
+                class="hidden mt-2 bg-gray-50 rounded-lg p-3">
+                {% csrf_token %}
+                <textarea name="reply_text" placeholder="Write a reply..."
+                  class="w-full p-2 text-sm border border-gray-300 rounded resize-none text-gray-900" rows="2"
+                  required></textarea>
+                <div class="flex justify-end mt-2 space-x-2">
+                  <button type="button" onclick="toggleReplyForm({{ review.id }})"
+                    class="px-3 py-1 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+                  <button type="submit"
+                    class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Reply</button>
+                </div>
+              </form>
+            </div>
+            {% endif %}
           </div>
-        {% endif %}
+          {% empty %}
+          <p class="text-gray-500">Belum ada ulasan.</p>
+          {% endfor %}
+        </div>
 
-        {% for menu in menus %}
-          {% if menu.photo %}
+        <!-- Photos Tab -->
+        <div id="content-photos" class="hidden">
+          <h3 class="text-lg font-bold mb-4">Foto Restoran & Menu</h3>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {% if restaurant.photo %}
+            <div class="rounded-lg overflow-hidden">
+              <img src="{{ restaurant.photo.url }}" alt="Resto Photo" class="w-full h-40 object-cover">
+            </div>
+            {% endif %}
+
+            {% for menu in menus %}
+            {% if menu.photo %}
             <div class="rounded-lg overflow-hidden">
               <img src="{{ menu.photo.url }}" alt="{{ menu.name }}" class="w-full h-40 object-cover">
             </div>
-          {% endif %}
-        {% endfor %}
+            {% endif %}
+            {% endfor %}
 
-        {% for review in reviews %}
-          {% if review.photo %}
+            {% for review in reviews %}
+            {% if review.photo %}
             <div class="rounded-lg overflow-hidden relative">
-              <img src="{{ review.photo.url }}" alt="Review by {{ review.user.username }}" class="w-full h-40 object-cover">
+              <img src="{{ review.photo.url }}" alt="Review by {{ review.user.username }}"
+                class="w-full h-40 object-cover">
               <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2">
                 <p class="text-xs">By {{ review.user.username }}</p>
               </div>
             </div>
-          {% endif %}
-        {% endfor %}
+            {% endif %}
+            {% endfor %}
 
-        {% if not restaurant.photo and not menus and not reviews %}
-          <p class="text-gray-500">Belum ada foto.</p>
-        {% endif %}
+            {% if not restaurant.photo and not menus and not reviews %}
+            <p class="text-gray-500">Belum ada foto.</p>
+            {% endif %}
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
 </section>
 {% endblock %}
 
 {% block extra_js %}
-<script
-  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-  crossorigin=""
-></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  // ==== MAP ====
-  const mapEl = document.getElementById('map');
-  const lat = mapEl?.dataset?.lat ? Number(mapEl.dataset.lat) : null;
-  const lng = mapEl?.dataset?.lng ? Number(mapEl.dataset.lng) : null;
+  document.addEventListener('DOMContentLoaded', () => {
+    // ==== MAP ====
+    const mapEl = document.getElementById('map');
+    const lat = mapEl?.dataset?.lat ? Number(mapEl.dataset.lat) : null;
+    const lng = mapEl?.dataset?.lng ? Number(mapEl.dataset.lng) : null;
 
-  if (lat != null && lng != null && !Number.isNaN(lat) && !Number.isNaN(lng)) {
-    const map = L.map('map').setView([lat, lng], 16);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-    L.marker([lat, lng]).addTo(map)
-      .bindPopup(`<b>{{ restaurant.name|escapejs }}</b><br>{{ restaurant.address|escapejs }}`)
-      .openPopup();
-  } else {
-    mapEl.innerHTML = '<div class="text-gray-500 p-4">Location not available</div>';
-  }
+    if (lat != null && lng != null && !Number.isNaN(lat) && !Number.isNaN(lng)) {
+      const map = L.map('map').setView([lat, lng], 16);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+      L.marker([lat, lng]).addTo(map)
+        .bindPopup(`<b>{{ restaurant.name|escapejs }}</b><br>{{ restaurant.address|escapejs }}`)
+        .openPopup();
+    } else {
+      mapEl.innerHTML = '<div class="text-gray-500 p-4">Location not available</div>';
+    }
 
-  // ==== TABS ====
-  function activateTab(tabName) {
-    ['menu', 'reviews', 'photos'].forEach(tab => {
-      document.getElementById('content-' + tab).classList.add('hidden');
-      document.getElementById('tab-' + tab).className =
-        'tab-inactive w-full py-2 text-sm font-medium';
-    });
-    document.getElementById('content-' + tabName).classList.remove('hidden');
-    document.getElementById('tab-' + tabName).className =
-      'tab-active w-full py-2 text-sm font-medium';
-  }
-
-  document.getElementById('tab-menu').addEventListener('click', () => activateTab('menu'));
-  document.getElementById('tab-reviews').addEventListener('click', () => activateTab('reviews'));
-  document.getElementById('tab-photos').addEventListener('click', () => activateTab('photos'));
-
-  // default tab
-  activateTab('menu');
-
-  // ==== WRITE REVIEW: star click fills left stars ====
-  const starWrap = document.getElementById('rating-stars');
-  const hiddenInput = document.getElementById('rating-input');
-  if (starWrap && hiddenInput) {
-    starWrap.addEventListener('click', (e) => {
-      if (!(e.target instanceof HTMLElement)) return;
-      const rating = Number(e.target.dataset.rating);
-      if (!rating) return;
-      hiddenInput.value = String(rating);
-      [...starWrap.querySelectorAll('.star-rating')].forEach((el, idx) => {
-        if (idx < rating) {
-          el.classList.remove('text-gray-300');
-          el.classList.add('text-yellow-400');
-        } else {
-          el.classList.remove('text-yellow-400');
-          el.classList.add('text-gray-300');
-        }
+    // ==== TABS ====
+    function activateTab(tabName) {
+      ['menu', 'reviews', 'photos'].forEach(tab => {
+        document.getElementById('content-' + tab).classList.add('hidden');
+        document.getElementById('tab-' + tab).className =
+          'tab-inactive w-full py-2 text-sm font-medium';
       });
-    });
-  }
-});
+      document.getElementById('content-' + tabName).classList.remove('hidden');
+      document.getElementById('tab-' + tabName).className =
+        'tab-active w-full py-2 text-sm font-medium';
+    }
 
-// ==== helpers for replies & likes ====
-function toggleReplyForm(id){
-  const el = document.getElementById('reply-form-' + id);
-  if (!el) return;
-  el.classList.toggle('hidden');
-}
+    document.getElementById('tab-menu').addEventListener('click', () => activateTab('menu'));
+    document.getElementById('tab-reviews').addEventListener('click', () => activateTab('reviews'));
+    document.getElementById('tab-photos').addEventListener('click', () => activateTab('photos'));
 
-function toggleLike(el){
-  const liked = el.classList.contains('text-red-700');
-  if (liked) {
-    el.textContent = '♡';
-    el.classList.remove('text-red-700');
-    el.classList.add('text-gray-400');
-  } else {
-    el.textContent = '❤️';
-    el.classList.remove('text-gray-400');
-    el.classList.add('text-red-700');
+    // default tab
+    activateTab('menu');
+
+    // ==== WRITE REVIEW: star click fills left stars ====
+    const starWrap = document.getElementById('rating-stars');
+    const hiddenInput = document.getElementById('rating-input');
+    if (starWrap && hiddenInput) {
+      starWrap.addEventListener('click', (e) => {
+        if (!(e.target instanceof HTMLElement)) return;
+        const rating = Number(e.target.dataset.rating);
+        if (!rating) return;
+        hiddenInput.value = String(rating);
+        [...starWrap.querySelectorAll('.star-rating')].forEach((el, idx) => {
+          if (idx < rating) {
+            el.classList.remove('text-gray-300');
+            el.classList.add('text-yellow-400');
+          } else {
+            el.classList.remove('text-yellow-400');
+            el.classList.add('text-gray-300');
+          }
+        });
+      });
+    }
+  });
+
+  // ==== helpers for replies & likes ====
+  function toggleReplyForm(id) {
+    const el = document.getElementById('reply-form-' + id);
+    if (!el) return;
+    el.classList.toggle('hidden');
   }
-}
+
+  function toggleLike(el) {
+    const liked = el.classList.contains('text-red-700');
+    if (liked) {
+      el.textContent = '♡';
+      el.classList.remove('text-red-700');
+      el.classList.add('text-gray-400');
+    } else {
+      el.textContent = '❤️';
+      el.classList.remove('text-gray-400');
+      el.classList.add('text-red-700');
+    }
+  }
 </script>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const stars = Array.from(document.querySelectorAll('#rating-stars .star-rating'));
-  const input = document.getElementById('rating-input');
+  document.addEventListener('DOMContentLoaded', () => {
+    const stars = Array.from(document.querySelectorAll('#rating-stars .star-rating'));
+    const input = document.getElementById('rating-input');
 
-  function paint(rating) {
-    stars.forEach((s, i) => {
-      if (i < rating) {
-        s.classList.remove('text-gray-300');
-        s.classList.add('text-yellow-400');
-      } else {
-        s.classList.remove('text-yellow-400');
-        s.classList.add('text-gray-300');
-      }
-    });
-  }
+    function paint(rating) {
+      stars.forEach((s, i) => {
+        if (i < rating) {
+          s.classList.remove('text-gray-300');
+          s.classList.add('text-yellow-400');
+        } else {
+          s.classList.remove('text-yellow-400');
+          s.classList.add('text-gray-300');
+        }
+      });
+    }
 
-  stars.forEach((star, idx) => {
-    star.addEventListener('click', () => {
-      const ratingValue = idx + 1;
-      input.value = ratingValue;
-      paint(ratingValue);
+    stars.forEach((star, idx) => {
+      star.addEventListener('click', () => {
+        const ratingValue = idx + 1;
+        input.value = ratingValue;
+        paint(ratingValue);
+      });
     });
   });
-});
 </script>
 
 {% endblock %}

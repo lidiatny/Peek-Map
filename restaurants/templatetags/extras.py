@@ -1,15 +1,54 @@
 from django import template
+import json
 
 register = template.Library()
 
 @register.filter
-def get_item(d, key):
-    if d is None:
-        return None
+def get_item(obj, key):
+    """
+    Ambil item dari:
+    - dict: dukung kunci int/string ("1" atau 1)
+    - list/tuple: dukung index 1-based (1..len) dan 0-based (0..len-1)
+    - string: kalau string JSON yang berisi dict/list, parse dulu
+    Selalu mengembalikan 0 kalau tidak ketemu/invalid agar aman di template.
+    """
+    if obj is None:
+        return 0
+
+    # Jika string, coba parse JSON (misal hasil json.dumps)
+    if isinstance(obj, str):
+        try:
+            obj = json.loads(obj)
+        except Exception:
+            return 0
+
+    # Normalisasi kunci
     try:
-        return d.get(int(key))
-    except Exception:
-        return d.get(str(key), None)
+        ikey = int(key)
+    except (ValueError, TypeError):
+        ikey = key  # biarkan string kalau memang bukan angka
+
+    # List/Tuple
+    if isinstance(obj, (list, tuple)):
+        if isinstance(ikey, int):
+            # Coba 1-based (1..len)
+            if 1 <= ikey <= len(obj):
+                return obj[ikey - 1]
+            # fallback 0-based
+            if 0 <= ikey < len(obj):
+                return obj[ikey]
+        return 0
+
+    # Dict
+    if isinstance(obj, dict):
+        if ikey in obj:
+            return obj[ikey]
+        # kunci mungkin diserialisasi sebagai string
+        if isinstance(ikey, int) and str(ikey) in obj:
+            return obj[str(ikey)]
+        return 0
+
+    return 0
 
 @register.filter
 def to_int(value):
