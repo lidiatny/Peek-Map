@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Restaurant, Menu
+from django.utils.formats import number_format
 
 @admin.register(Restaurant)
 class RestaurantAdmin(admin.ModelAdmin):
@@ -18,11 +19,12 @@ class RestaurantAdmin(admin.ModelAdmin):
 
 @admin.register(Menu)
 class MenuAdmin(admin.ModelAdmin):
-    list_display = ('name', 'restaurant', 'price', 'formatted_price')
-    search_fields = ('name', 'restaurant__name')
-    list_filter = ('restaurant',)
-    ordering = ('restaurant', 'name')
+    list_display = ("id", "restaurant", "name", "formatted_price")
+    search_fields = ("name", "restaurant__name")
 
+    @admin.display(description="Price", ordering="price")
     def formatted_price(self, obj):
-        return f"Rp {obj.price:,.0f}"
-    formatted_price.short_description = 'Harga'
+        if obj.price is None:
+            return "-"  # atau "N/A"
+        # aman untuk Decimal, dan pakai pemisah Indonesia
+        return f"Rp {number_format(obj.price, 0, decimal_sep=',', thousand_sep='.', force_grouping=True)}"
