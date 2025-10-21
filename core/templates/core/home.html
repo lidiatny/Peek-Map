@@ -119,7 +119,7 @@
           <h3 class="font-semibold text-gray-800">{{ resto.name }}</h3>
           <p class="text-sm text-gray-600 mt-1">{{ resto.description|truncatechars:60 }}</p>
           <div class="flex items-center mt-2">
-            {% with resto.review_set.all as reviews %}
+            {% with resto.reviews.all as reviews %}
               {% if reviews %}
                 {% with reviews|length as review_count %}
                   {% with reviews as review_list %}

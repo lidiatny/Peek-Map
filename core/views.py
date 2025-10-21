@@ -154,7 +154,7 @@ def explore(request):
         bookmarks = Bookmark.objects.filter(user=request.user).select_related('restaurant')
         restos = [b.restaurant for b in bookmarks]
         for r in restos:
-            reviews = r.reviews_set.all()   # kalau kamu pakai related_name='reviews', ganti ke r.reviews.all()
+            reviews = r.reviews.all()   # kalau kamu pakai related_name='reviews', ganti ke r.reviews.all()
             r.reviews_cnt = reviews.count()
             r.rating_avg = round(sum((rv.rating or 0) for rv in reviews) / len(reviews), 1) if reviews else 0.0
         context['restaurants'] = restos
