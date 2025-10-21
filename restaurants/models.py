@@ -1,4 +1,7 @@
 from django.db import models
+from django.apps import apps
+from django.db.models import Avg, Value
+from django.db.models.functions import Coalesce
 
 class Restaurant(models.Model):
     # === kolom lama ===
@@ -32,10 +35,11 @@ class Restaurant(models.Model):
 
     @property
     def average_rating(self):
-        qs = self.review_set.all()
-        if not qs.exists():
-            return 0
-        return round(sum(r.rating for r in qs if r.rating is not None) / qs.count(), 1)
+    # Hindari ketergantungan pada related_name
+        Review = apps.get_model('reviews', 'Review')
+        agg = Review.objects.filter(restaurant=self, rating__isnull=False) \
+                        .aggregate(avg=Coalesce(Avg('rating'), Value(0.0)))
+        return round(float(agg['avg']), 1)
 
     class Meta:
         db_table = 'restaurant'
