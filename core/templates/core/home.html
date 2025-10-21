@@ -1,15 +1,13 @@
-<!-- core/templates/core/home.html -->
+{# core/templates/core/home.html #}
 {% extends 'accounts/base.html' %}
 
 {% block title %}Home - Peek&Map{% endblock %}
 
 {% block extra_css %}
-<!-- Swiper CSS -->
- <link rel="stylesheet"
+<link rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""/>
-
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
 
 <style>
@@ -23,359 +21,356 @@
   }
 
   /* Marquee */
-  .marquee-wrapper {
-    overflow: hidden;
-    white-space: nowrap;
-    width: 100%;
-    padding: 10px 0;
-  }
-  .marquee-track {
-    display: inline-flex;
-    animation: marquee 20s linear infinite;
-  }
-  .marquee-track:hover {
-    animation-play-state: paused;
-  }
-  @keyframes marquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
+  .marquee-wrapper { overflow: hidden; white-space: nowrap; width: 100%; padding: 10px 0; }
+  .marquee-track { display: inline-flex; animation: marquee 20s linear infinite; }
+  .marquee-track:hover { animation-play-state: paused; }
+  @keyframes marquee { 0% { transform: translateX(0);} 100% { transform: translateX(-50%);} }
 
-  /* Star Rating */
-  .star {
-    color: #fbbf24;
-    font-size: 1.25rem;
-  }
-  .star-empty {
-    color: #d1d5db;
-  }
+  /* Stars */
+  .star { color: #fbbf24; font-size: 1.1rem; }
+  .star-empty { color: #d1d5db; }
+
+  /* Make main content text readable */
+  .home-page { color: #111827; } /* text-gray-900 */
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="home-page">
 
-<!-- Hero Section -->
-<section class="py-12 px-6">
-  <div class="hero-bg rounded-3xl relative overflow-hidden">
-    <!-- Overlay -->
-    <div class="absolute inset-0 bg-black bg-opacity-20 rounded-3xl"></div>
-    <!-- Search Bar -->
-    <div class="absolute top-12 left-1/2 -translate-x-1/2 w-[92%] md:w-4/5">
-      <div class="relative bg-white rounded-md shadow-md flex items-center px-4 py-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        <form method="GET" class="w-full flex items-center space-x-2">
-          <input
-            type="text"
-            name="q"
-            placeholder="Search restaurant or menu"
-            class="flex-grow outline-none text-sm text-gray-800 placeholder-gray-500 bg-transparent"
-            value="{{ query|default:'' }}"
-          />
-          <select name="category" class="text-sm text-gray-600 bg-transparent border-none outline-none">
-            <option value="">All Categories</option>
-            {% for cat in categories %}
-              <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
-            {% endfor %}
-          </select>
-          <select name="min_rating" class="text-sm text-gray-600 bg-transparent border-none outline-none">
-            <option value="">Any Rating</option>
-            <option value="4" {% if min_rating == "4" %}selected{% endif %}>4+ Stars</option>
-            <option value="3" {% if min_rating == "3" %}selected{% endif %}>3+ Stars</option>
-          </select>
-          <button type="submit" class="text-gray-500 hover:text-gray-700">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-              viewBox="0 0 24 24" stroke="currentColor">
+  <!-- Hero Section -->
+  <section class="py-12 px-6">
+    <div class="hero-bg rounded-3xl relative overflow-hidden">
+      <!-- Overlay -->
+      <div class="absolute inset-0 bg-black bg-opacity-20 rounded-3xl"></div>
+
+      <!-- Search Bar -->
+      <div class="absolute top-12 left-1/2 -translate-x-1/2 w-[92%] md:w-4/5">
+        <div class="relative bg-white rounded-md shadow-md flex items-center px-4 py-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-          </button>
+          </svg>
 
-        </form>
-      </div>
-    </div>
-  </div>
-</section>
+          <form method="GET" action="{% url 'core:home' %}" class="w-full flex items-center gap-2">
+            <input
+              type="text"
+              name="q"
+              placeholder="Search restaurant or menu"
+              class="flex-grow outline-none text-sm text-gray-900 placeholder-gray-500 bg-transparent"
+              value="{{ query|default:'' }}"
+              aria-label="Search"
+            />
 
-<!-- Search Results -->
-{% if resto_results %}
-<section class="px-6 py-10 md:px-0 mt-10">
-  <div class="flex items-center mb-6">
-    <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Search Results</h2>
-    <span class="ml-4 text-sm text-gray-600">({{ resto_results|length }} restaurants found)</span>
-  </div>
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    {% for resto in resto_results %}
-      <a href="{% url 'restaurants:detail' resto.id %}" class="bg-white rounded-md shadow-sm hover:shadow-md transition">
-        {% if resto.photo %}
-          <img src="{{ resto.photo.url }}" alt="{{ resto.name }}" class="w-full h-48 object-cover rounded-t-md">
-        {% else %}
-          <div class="w-full h-48 bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center rounded-t-md">
-            <span class="text-gray-700 font-bold">No Photo</span>
-          </div>
-        {% endif %}
-        <div class="p-4">
-          <h3 class="font-semibold text-gray-800">{{ resto.name }}</h3>
-          <p class="text-sm text-gray-600 mt-1">{{ resto.description|truncatechars:60 }}</p>
-          <div class="flex items-center mt-2">
-            {% with resto.reviews.all as reviews %}
-              {% if reviews %}
-                {% with reviews|length as review_count %}
-                  {% with reviews as review_list %}
-                    <div class="flex text-yellow-400 text-sm mr-2">
-                      {% for i in '12345'|make_list %}
-                        {% if forloop.counter <= review_list.0.rating %}★{% else %}☆{% endif %}
-                      {% endfor %}
-                    </div>
-                    <span class="text-sm text-gray-500">({{ review_count }} reviews)</span>
-                  {% endwith %}
-                {% endwith %}
-              {% else %}
-                <span class="text-sm text-gray-500">No reviews yet</span>
-              {% endif %}
-            {% endwith %}
-          </div>
-        </div>
-      </a>
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
-
-<!-- Map Section -->
-<section class="bg-[#fff4ee] py-12 px-12 mt-20 rounded-3xl">
-  <div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 items-center">
-    <!-- Left Side -->
-    <div>
-      <h2 class="text-3xl md:text-4xl font-bold text-[#a32020] mb-4">Dishcover Your Favorite Restaurant</h2>
-      <p class="text-gray-700 mb-6">
-        Dishcover, review, and keep the restaurants you love. Let the food journey begin!
-      </p>
-      <a href="{% url 'core:explore' %}" class="bg-green-700 text-white px-6 py-2 rounded-md hover:bg-green-800 duration-300 inline-block">
-        Dishcover
-      </a>
-    </div>
-
-    <!-- Right Side -->
-    <div>
-      <h3 class="text-right text-xl md:text-3xl pb-7 font-bold text-green-800 mb-2">Peek the Map</h3>
-      <div class="bg-white rounded-xl shadow-lg overflow-hidden p-4">
-        <!-- Dropdown Kota -->
-        <div class="flex justify-between items-center mb-4">
-          <div class="relative">
-            <select id="city-select" class="appearance-none bg-gray-100 text-gray-800 px-4 py-1 pr-8 rounded-md text-sm focus:outline-none">
-              <option value="-6.168329,106.758239">Jakarta Barat</option>
-              <option value="-6.266155,106.813194">Jakarta Selatan</option>
-              <option value="-6.121435,106.774124">Jakarta Utara</option>
-              <option value="-6.225014,106.900447">Jakarta Timur</option>
-              <option value="-6.186486,106.834091">Jakarta Pusat</option>
-
+            <!-- Category filter (uses Restaurant.type in the view) -->
+            <select name="category" class="text-sm text-gray-800 bg-transparent border-none outline-none" aria-label="Category">
+              <option value="">All Categories</option>
+              {% for cat in categories %}
+                <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
+              {% endfor %}
             </select>
-            <svg xmlns="http://www.w3.org/2000/svg" class="absolute right-2 top-2.5 h-4 w-4 text-gray-600 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
 
-        <!-- Peta Leaflet -->
-        <main class="pt-5">   <!-- sama dengan h-16 di header -->
-          <!-- Peta Leaflet -->
-          <div id="map" class="relative z-0 w-full h-64 md:h-72 rounded-xl overflow-hidden"></div>
-        </main>
-        
-        <!-- Explore Button -->
-        <div class="mt-4 text-center">
-          <a href="{% url 'core:explore' %}" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 transition inline-block">
-            Peek more
-          </a>
+            <!-- Rating filter -->
+            <select name="min_rating" class="text-sm text-gray-800 bg-transparent border-none outline-none" aria-label="Minimum rating">
+              <option value="">Any Rating</option>
+              <option value="4" {% if min_rating == "4" %}selected{% endif %}>4+ Stars</option>
+              <option value="3" {% if min_rating == "3" %}selected{% endif %}>3+ Stars</option>
+            </select>
+
+            <button type="submit" class="text-gray-600 hover:text-gray-900" aria-label="Submit search">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                   viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </button>
+          </form>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-{% if user.is_authenticated and recently_viewed %}
-<section class="px-6 py-10 md:px-0 mt-10">
-  <div class="flex items-center mb-6">
-    <h2 class="text-2xl md:text-3xl font-bold text-gray-900">Recently Viewed</h2>
-  </div>
-  <div class="flex space-x-6 overflow-x-auto pb-4">
-    {% for resto in recently_viewed %}
-      <a href="{% url 'restaurants:detail' resto.id %}" 
-         class="flex-none w-60 bg-white rounded-xl shadow-md border hover:shadow-lg transition transform hover:-translate-y-1">
-         
-        {% if resto.photo %}
-          <img src="{{ resto.photo.url }}" alt="{{ resto.name }}" 
-               class="w-full h-40 object-cover rounded-t-xl">
-        {% else %}
-          <div class="w-full h-40 bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center rounded-t-xl">
-            <span class="text-white font-bold text-lg">No Photo</span>
-          </div>
-        {% endif %}
-        
-        <div class="p-4">
-          <h3 class="font-semibold text-lg text-gray-900 truncate">{{ resto.name|default:"Unknown" }}</h3>
-          <p class="text-sm text-gray-700 mt-2">
-            {{ resto.average_rating|floatformat:1 }}⭐
-          </p>
-        </div>
-      </a>
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
-
-
-<!-- Recommendation -->
-<section class="px-6 py-10 md:px-0 mt-10">
-  <div class="flex items-center mb-6">
-    <h2 class="text-2xl md:text-3xl font-bold text-green-900">Recommendation for You</h2>
-  </div>
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    {% for resto in top_rated|slice:":8" %}
-      <a href="{% url 'restaurants:detail' resto.id %}" class="bg-white rounded-md shadow-sm hover:shadow-md transition">
-        {% if resto.photo %}
-          <img src="{{ resto.photo.url }}" alt="{{ resto.name }}" class="w-full h-60 object-cover rounded-md">
-        {% else %}
-          <div class="w-full h-60 bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center">
-            <span class="text-gray-700 font-bold">No Photo</span>
-          </div>
-        {% endif %}
-        <div class="px-2 py-4">
-          <div class="flex">
-            {% for i in '12345'|make_list %}
-              <span class="star {% if forloop.counter <= resto.avg_rating|floatformat:"0" %}{% else %}star-empty{% endif %}">★</span>
-            {% endfor %}
-          </div>
-          <h3 class="font-semibold mt-2 text-gray-800">{{ resto.name }}</h3>
-          <p class="text-sm text-gray-600 mt-1">{{ resto.address|truncatechars:50 }}</p>
-        </div>
-      </a>
-    {% empty %}
-      <p class="col-span-4 text-gray-500">No recommendations yet.</p>
-    {% endfor %}
-  </div>
-  <div class="flex justify-center mt-8">
-    <a href="{% url 'core:explore' %}?tab=all" class="bg-green-700 hover:bg-green-800 text-white px-8 py-2 rounded-md text-lg duration-300 inline-block">
-      Peek All
-    </a>
-  </div>
-</section>
-
-<!-- Top of the Week (Marquee) -->
-<section class="px-6 py-10 md:px-0 overflow-hidden mt-10">
-  <div class="flex items-center mb-6">
-    <h2 class="text-2xl md:text-3xl font-bold text-green-900">Top of the Week</h2>
-  </div>
-  <div class="marquee-wrapper">
-    <div class="marquee-track">
-      {% for resto in top_rated|slice:":6" %}
-        <a href="{% url 'restaurants:detail' resto.id %}" class="w-64 min-w-[250px] bg-white rounded-lg overflow-hidden shadow-md mx-2 hover:shadow-lg transition">
-          {% if resto.photo %}
-            <img src="{{ resto.photo.url }}" alt="{{ resto.name }}" class="w-full h-48 object-cover">
-          {% else %}
-            <div class="w-full h-48 bg-gray-300 flex items-center justify-center">
-              <span class="text-gray-600">No Photo</span>
-            </div>
-          {% endif %}
-          <div class="p-4">
-            <h3 class="font-semibold text-gray-800">{{ resto.name }}</h3>
-            <p class="text-sm text-gray-500">{{ resto.address|truncatechars:40 }}</p>
-          </div>
-        </a>
-      {% endfor %}
-      <!-- Repeat for marquee effect -->
-      {% for resto in top_rated|slice:":6" %}
-        <a href="{% url 'restaurants:detail' resto.id %}" class="w-64 min-w-[250px] bg-white rounded-lg overflow-hidden shadow-md mx-2 hover:shadow-lg transition">
-          {% if resto.photo %}
-            <img src="{{ resto.photo.url }}" alt="{{ resto.name }}" class="w-full h-48 object-cover">
-          {% else %}
-            <div class="w-full h-48 bg-gray-300 flex items-center justify-center">
-              <span class="text-gray-600">No Photo</span>
-            </div>
-          {% endif %}
-          <div class="p-4">
-            <h3 class="font-semibold text-gray-800">{{ resto.name }}</h3>
-            <p class="text-sm text-gray-500">{{ resto.address|truncatechars:40 }}</p>
-          </div>
-        </a>
-      {% endfor %}
+  <!-- Search Results (visible if any search/filter applied) -->
+  {% if query or category or min_rating %}
+  <section class="px-6 py-10 md:px-0 mt-10">
+    <div class="flex items-center mb-6">
+      <h2 class="text-2xl md:text-3xl font-bold text-gray-900">Search Results</h2>
+      {% with total=results_count %}
+        <span class="ml-4 text-sm text-gray-600">
+          ({{ total }} restaurant{% if total != 1 %}s{% endif %} found{% if query %} for “{{ query }}”{% endif %})
+        </span>
+      {% endwith %}
     </div>
-  </div>
-</section>
 
-<!-- Our Reviews (Swiper Slider) -->
-<section class="px-6 py-10 md:px-0 mt-10">
-  <div class="py-10 px-4 md:px-0">
-    <h2 class="text-3xl font-bold text-red-700 mb-8">User Reviews</h2>
-    <div class="swiper mySwiper">
-      <div class="swiper-wrapper">
-        {% for review in last_reviews %}
-          <div class="swiper-slide px-4">
-            <a href="{% url 'restaurants:detail' review.restaurant.id %}" class="bg-white p-6 rounded-lg shadow-md min-h-[180px] block hover:shadow-lg transition">
-              <p class="text-lg text-gray-500 font-medium mb-4">"{{ review.comment|truncatechars:100 }}"</p>
-              <div class="flex items-center gap-3 mt-4">
-                {% if review.user.profile and review.user.profile.photo %}
-                  <img src="{{ review.user.profile.photo.url }}" alt="{{ review.user.username }}" 
-                       class="w-10 h-10 rounded-full object-cover">
-                {% else %}
-                  <div class="w-10 h-10 bg-gradient-to-br from-amber-100 to-orange-200 rounded-full flex items-center justify-center text-gray-700 font-bold">
-                    {{ review.user.username|slice:":1" }}
-                  </div>
-                {% endif %}
-                <div>
-                  <p class="font-semibold text-gray-800">{{ review.user.username }}</p>
-                  <p class="text-gray-500 text-sm">{{ review.restaurant.name }}</p>
-                </div>
+    {% if resto_results %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {% for resto in resto_results %}
+          <a href="{% url 'restaurants:detail' resto.id %}"
+             class="bg-white rounded-md shadow-sm hover:shadow-md transition block">
+            {% if resto.photo %}
+              <img src="{{ resto.photo.url }}" alt="{{ resto.name }}" class="w-full h-48 object-cover rounded-t-md">
+            {% else %}
+              <div class="w-full h-48 bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center rounded-t-md">
+                <span class="text-gray-700 font-bold">No Photo</span>
               </div>
-            </a>
-          </div>
-        {% empty %}
-          <div class="swiper-slide">
-            <p class="text-gray-500">No reviews yet.</p>
-          </div>
+            {% endif %}
+            <div class="p-4">
+              <h3 class="font-semibold text-gray-900">{{ resto.name }}</h3>
+
+              {# tampilkan type jika ada #}
+              {% if resto.type %}
+                <p class="text-xs text-gray-600 mt-1">{{ resto.type }}</p>
+              {% endif %}
+
+              {% if resto.description %}
+                <p class="text-sm text-gray-700 mt-1">{{ resto.description|truncatechars:80 }}</p>
+              {% endif %}
+
+              <!-- Rating & count -->
+              <div class="mt-2 flex items-center text-sm">
+                {% with avg=resto.average_rating|floatformat:'0' %}
+                  <div class="flex text-yellow-500 mr-2">
+                    {% for i in "12345"|make_list %}
+                      {% if forloop.counter <= avg %}★{% else %}☆{% endif %}
+                    {% endfor %}
+                  </div>
+                {% endwith %}
+                <span class="text-gray-500">({{ resto.reviews.count }} reviews)</span>
+              </div>
+            </div>
+          </a>
         {% endfor %}
       </div>
-      <div class="swiper-pagination mt-6"></div>
-    </div>
-  </div>
-</section>
+    {% else %}
+      <p class="text-gray-700">No restaurants found. Try a different keyword or adjust filters.</p>
+    {% endif %}
+  </section>
+  {% endif %}
 
+  <!-- Map Section -->
+  <section class="bg-[#fff4ee] py-12 px-12 mt-20 rounded-3xl">
+    <div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 items-center">
+      <!-- Left -->
+      <div>
+        <h2 class="text-3xl md:text-4xl font-bold text-[#a32020] mb-4">Dishcover Your Favorite Restaurant</h2>
+        <p class="text-gray-800 mb-6">
+          Dishcover, review, and keep the restaurants you love. Let the food journey begin!
+        </p>
+        <a href="{% url 'core:explore' %}" class="bg-green-700 text-white px-6 py-2 rounded-md hover:bg-green-800 duration-300 inline-block">
+          Dishcover
+        </a>
+      </div>
+
+      <!-- Right -->
+      <div>
+        <h3 class="text-right text-xl md:text-3xl pb-7 font-bold text-green-800 mb-2">Peek the Map</h3>
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden p-4">
+          <!-- City selector -->
+          <div class="flex justify-between items-center mb-4">
+            <div class="relative">
+              <select id="city-select" class="appearance-none bg-gray-100 text-gray-900 px-4 py-1 pr-8 rounded-md text-sm focus:outline-none">
+                <option value="-6.168329,106.758239">Jakarta Barat</option>
+                <option value="-6.266155,106.813194">Jakarta Selatan</option>
+                <option value="-6.121435,106.774124">Jakarta Utara</option>
+                <option value="-6.225014,106.900447">Jakarta Timur</option>
+                <option value="-6.186486,106.834091">Jakarta Pusat</option>
+              </select>
+              <svg xmlns="http://www.w3.org/2000/svg" class="absolute right-2 top-2.5 h-4 w-4 text-gray-600 pointer-events-none"
+                   fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+
+          <!-- Leaflet Map -->
+          <main class="pt-5">
+            <div id="map" class="relative z-0 w-full h-64 md:h-72 rounded-xl overflow-hidden"></div>
+          </main>
+
+          <!-- Explore Button -->
+          <div class="mt-4 text-center">
+            <a href="{% url 'core:explore' %}" class="bg-gray-700 text-white px-6 py-2 rounded-md hover:bg-gray-800 transition inline-block">
+              Peek more
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recently Viewed -->
+  {% if user.is_authenticated and recently_viewed %}
+  <section class="px-6 py-10 md:px-0 mt-10">
+    <div class="flex items-center mb-6">
+      <h2 class="text-2xl md:text-3xl font-bold text-gray-900">Recently Viewed</h2>
+    </div>
+    <div class="flex space-x-6 overflow-x-auto pb-4">
+      {% for resto in recently_viewed %}
+        <a href="{% url 'restaurants:detail' resto.id %}"
+           class="flex-none w-60 bg-white rounded-xl shadow-md border hover:shadow-lg transition transform hover:-translate-y-1">
+          {% if resto.photo %}
+            <img src="{{ resto.photo.url }}" alt="{{ resto.name }}" class="w-full h-40 object-cover rounded-t-xl">
+          {% else %}
+            <div class="w-full h-40 bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center rounded-t-xl">
+              <span class="text-white font-bold text-lg">No Photo</span>
+            </div>
+          {% endif %}
+          <div class="p-4">
+            <h3 class="font-semibold text-lg text-gray-900 truncate">{{ resto.name|default:"Unknown" }}</h3>
+            <p class="text-sm text-gray-800 mt-2">{{ resto.average_rating|floatformat:1 }} ⭐</p>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Recommendation -->
+  <section class="px-6 py-10 md:px-0 mt-10">
+    <div class="flex items-center mb-6">
+      <h2 class="text-2xl md:text-3xl font-bold text-green-900">Recommendation for You</h2>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {% for resto in top_rated|slice:":8" %}
+        <a href="{% url 'restaurants:detail' resto.id %}" class="bg-white rounded-md shadow-sm hover:shadow-md transition block">
+          {% if resto.photo %}
+            <img src="{{ resto.photo.url }}" alt="{{ resto.name }}" class="w-full h-60 object-cover rounded-md">
+          {% else %}
+            <div class="w-full h-60 bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center">
+              <span class="text-gray-700 font-bold">No Photo</span>
+            </div>
+          {% endif %}
+          <div class="px-2 py-4">
+            <div class="flex">
+              {% with avg=resto.avg_rating|floatformat:'0' %}
+                {% for i in '12345'|make_list %}
+                  <span class="star {% if forloop.counter <= avg %}{% else %}star-empty{% endif %}">★</span>
+                {% endfor %}
+              {% endwith %}
+            </div>
+            <h3 class="font-semibold mt-2 text-gray-900">{{ resto.name }}</h3>
+            <p class="text-sm text-gray-700 mt-1">{{ resto.address|truncatechars:50 }}</p>
+          </div>
+        </a>
+      {% empty %}
+        <p class="col-span-4 text-gray-700">No recommendations yet.</p>
+      {% endfor %}
+    </div>
+    <div class="flex justify-center mt-8">
+      <a href="{% url 'core:explore' %}?tab=all" class="bg-green-700 hover:bg-green-800 text-white px-8 py-2 rounded-md text-lg duration-300 inline-block">
+        Peek All
+      </a>
+    </div>
+  </section>
+
+  <!-- Top of the Week (Marquee) -->
+  <section class="px-6 py-10 md:px-0 overflow-hidden mt-10">
+    <div class="flex items-center mb-6">
+      <h2 class="text-2xl md:text-3xl font-bold text-green-900">Top of the Week</h2>
+    </div>
+    <div class="marquee-wrapper">
+      <div class="marquee-track">
+        {% for resto in top_rated|slice:":6" %}
+          <a href="{% url 'restaurants:detail' resto.id %}" class="w-64 min-w-[250px] bg-white rounded-lg overflow-hidden shadow-md mx-2 hover:shadow-lg transition">
+            {% if resto.photo %}
+              <img src="{{ resto.photo.url }}" alt="{{ resto.name }}" class="w-full h-48 object-cover">
+            {% else %}
+              <div class="w-full h-48 bg-gray-300 flex items-center justify-center">
+                <span class="text-gray-700">No Photo</span>
+              </div>
+            {% endif %}
+            <div class="p-4">
+              <h3 class="font-semibold text-gray-900">{{ resto.name }}</h3>
+              <p class="text-sm text-gray-700">{{ resto.address|truncatechars:40 }}</p>
+            </div>
+          </a>
+        {% endfor %}
+        {# repeat for seamless marquee #}
+        {% for resto in top_rated|slice:":6" %}
+          <a href="{% url 'restaurants:detail' resto.id %}" class="w-64 min-w-[250px] bg-white rounded-lg overflow-hidden shadow-md mx-2 hover:shadow-lg transition">
+            {% if resto.photo %}
+              <img src="{{ resto.photo.url }}" alt="{{ resto.name }}" class="w-full h-48 object-cover">
+            {% else %}
+              <div class="w-full h-48 bg-gray-300 flex items-center justify-center">
+                <span class="text-gray-700">No Photo</span>
+              </div>
+            {% endif %}
+            <div class="p-4">
+              <h3 class="font-semibold text-gray-900">{{ resto.name }}</h3>
+              <p class="text-sm text-gray-700">{{ resto.address|truncatechars:40 }}</p>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- Our Reviews (Swiper Slider) -->
+  <section class="px-6 py-10 md:px-0 mt-10">
+    <div class="py-10 px-4 md:px-0">
+      <h2 class="text-3xl font-bold text-red-700 mb-8">User Reviews</h2>
+      <div class="swiper mySwiper">
+        <div class="swiper-wrapper">
+          {% for review in last_reviews %}
+            <div class="swiper-slide px-4">
+              <a href="{% url 'restaurants:detail' review.restaurant.id %}" class="bg-white p-6 rounded-lg shadow-md min-h-[180px] block hover:shadow-lg transition">
+                <p class="text-lg text-gray-700 font-medium mb-4">"{{ review.comment|truncatechars:100 }}"</p>
+                <div class="flex items-center gap-3 mt-4">
+                  {% if review.user.profile and review.user.profile.photo %}
+                    <img src="{{ review.user.profile.photo.url }}" alt="{{ review.user.username }}" class="w-10 h-10 rounded-full object-cover">
+                  {% else %}
+                    <div class="w-10 h-10 bg-gradient-to-br from-amber-100 to-orange-200 rounded-full flex items-center justify-center text-gray-700 font-bold">
+                      {{ review.user.username|slice:":1" }}
+                    </div>
+                  {% endif %}
+                  <div>
+                    <p class="font-semibold text-gray-900">{{ review.user.username }}</p>
+                    <p class="text-gray-700 text-sm">{{ review.restaurant.name }}</p>
+                  </div>
+                </div>
+              </a>
+            </div>
+          {% empty %}
+            <div class="swiper-slide">
+              <p class="text-gray-700">No reviews yet.</p>
+            </div>
+          {% endfor %}
+        </div>
+        <div class="swiper-pagination mt-6"></div>
+      </div>
+    </div>
+  </section>
+
+</div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-<!-- Swiper JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
 <script>
-  // Initialize map
+  // Initialize Leaflet map
   const map = L.map('map').setView([-6.200000, 106.816666], 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    attribution: '&copy; OpenStreetMap contributors'
   }).addTo(map);
 
-  // Update map when city is selected
-  document.getElementById('city-select').addEventListener('change', function() {
+  // City selection
+  document.getElementById('city-select').addEventListener('change', function () {
     const [lat, lng] = this.value.split(',');
     map.setView([parseFloat(lat), parseFloat(lng)], 13);
   });
 
-  // Initialize Swiper
+  // Swiper
   new Swiper('.mySwiper', {
     loop: true,
     spaceBetween: 20,
-    pagination: {
-      el: '.swiper-pagination',
-      clickable: true,
-    },
+    pagination: { el: '.swiper-pagination', clickable: true },
     breakpoints: {
       640: { slidesPerView: 1 },
       768: { slidesPerView: 2 },
-      1024: { slidesPerView: 3 },
+      1024:{ slidesPerView: 3 },
     }
   });
 </script>

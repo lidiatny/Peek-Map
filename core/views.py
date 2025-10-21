@@ -12,32 +12,60 @@ from accounts.models import Bookmark
 
 from .recommendations import simple_recommendation
 from .utils import track_user_activity, get_recently_viewed_restaurants
+from django.db.models import Q
 
 
 def home(request):
-    query = request.GET.get('q')
-    category = request.GET.get('category')
-    min_rating = request.GET.get('min_rating')
+    query = (request.GET.get('q') or '').strip()
+    category = (request.GET.get('category') or '').strip()
+    min_rating = (request.GET.get('min_rating') or '').strip()
+
+    CATEGORY_MAP = {
+        'China': 'Chinese',
+        'Jepang': 'Japanese',
+        'Western': 'Western',
+        'Indonesia': 'Indonesian',
+        'Italian': 'Italian',
+    }
+
+    canon_cat = CATEGORY_MAP.get(category, category)  # fallback: pakai mentah
+
+    resto_results = Restaurant.objects.none()
+    menu_results = Menu.objects.none()
 
     # === Search & filters ===
     if query or category or min_rating:
+
         if query:
-            # Track search activity
-            track_user_activity(request.user, 'search', search_query=query)
-            resto_results = Restaurant.objects.filter(name__icontains=query)
-            menu_results = Menu.objects.filter(name__icontains=query)
+            if request.user.is_authenticated:
+                track_user_activity(request.user, 'search', search_query=query)
+            resto_results = (
+                Restaurant.objects
+                .filter(
+                    Q(name__icontains=query) |
+                    Q(menus__name__icontains=query)   # reverse FK Menu -> Restaurant
+                )
+                .distinct()
+            )
+            menu_results = Menu.objects.filter(name__icontains=query).select_related('restaurant')
         else:
             resto_results = Restaurant.objects.all()
-            menu_results = Menu.objects.none()
 
-        if category:
-            resto_results = resto_results.filter(description__icontains=category)
+        if canon_cat:
+            resto_results = resto_results.filter(
+                Q(type__iexact=canon_cat) |              # ← pakai field yang benar
+                Q(description__icontains=canon_cat) 
+            )
 
         if min_rating:
+            try:
+                thr = float(min_rating)
+            except ValueError:
+                thr = 0.0
             resto_results = (
                 resto_results
                 .annotate(rating_avg=Coalesce(Avg('reviews__rating'), 0.0))
-                .filter(rating_avg__gte=float(min_rating))
+                .filter(rating_avg__gte=thr)
             )
     else:
         resto_results = Restaurant.objects.none()
@@ -48,7 +76,7 @@ def home(request):
     top_rated = (
         Restaurant.objects
         .annotate(rating_avg=Coalesce(Avg('reviews__rating'), 0.0))
-        .filter(rating_avg__gt=0)  # hanya yg punya rating
+        .filter(rating_avg__gt=0)
         .order_by('-rating_avg')[:5]
     )
 
@@ -77,6 +105,7 @@ def home(request):
         'min_rating': min_rating,
         'resto_results': resto_results,
         'menu_results': menu_results,
+        'results_count': resto_results.count(),
         'top_rated': top_rated,
         'last_reviews': last_reviews,
         'restaurants_all': restaurants_all,
