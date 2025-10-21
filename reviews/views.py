@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.db import IntegrityError
 from restaurants.models import Restaurant
 from .models import Review, ReviewReply
+from django.core.paginator import Paginator
+from django.db.models import Q
 
 @login_required
 def write_review(request, restaurant_id):
@@ -90,3 +92,38 @@ def add_reply(request, review_id):
                 messages.error(request, 'Gagal menambahkan reply. Coba lagi.')
     
     return redirect('restaurants:detail', restaurant_id=review.restaurant.id)
+
+@login_required
+def review_history(request):
+    q = (request.GET.get("q") or "").strip()
+    sort = (request.GET.get("sort") or "latest").strip()
+
+    reviews = (Review.objects
+               .filter(user=request.user)
+               .select_related("restaurant"))
+
+    if q:
+        reviews = reviews.filter(
+            Q(restaurant__name__icontains=q) |
+            Q(comment__icontains=q)
+        )
+
+    order_map = {
+        "latest": "-created_at",
+        "oldest": "created_at",
+        "rating_desc": "-rating",
+        "rating_asc": "rating",
+    }
+    reviews = reviews.order_by(order_map.get(sort, "-created_at"))
+
+    paginator = Paginator(reviews, 10)  # 10 item per halaman
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "page_obj": page_obj,
+        "q": q,
+        "sort": sort,
+        "total": reviews.count(),
+    }
+    return render(request, "reviews/history.html", context)

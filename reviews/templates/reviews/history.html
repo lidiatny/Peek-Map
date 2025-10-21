@@ -1,0 +1,82 @@
+{# templates/reviews/history.html #}
+{% extends "accounts/base.html" %}
+{% load static %}
+
+{% block title %}My Review History{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-6 text-black">
+  <h1 class="text-2xl font-semibold mb-4">Review History</h1>
+
+  <form method="get" class="flex flex-col md:flex-row gap-3 md:items-center justify-between mb-4">
+    <div class="flex gap-2">
+      <input
+        type="text"
+        name="q"
+        value="{{ q }}"
+        placeholder="Cari restoran / komentar…"
+        class="border rounded-lg px-3 py-2 w-72"
+      />
+      <button class="px-4 py-2 rounded-lg border hover:bg-gray-50">Search</button>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <label for="sort" class="text-sm text-black-600">Sort by:</label>
+      <select name="sort" id="sort" onchange="this.form.submit()" class="border rounded-lg px-3 py-2">
+        <option value="latest" {% if sort == "latest" %}selected{% endif %}>Most Recent</option>
+        <option value="oldest" {% if sort == "oldest" %}selected{% endif %}>Oldest Rating</option>
+        <option value="rating_desc" {% if sort == "rating_desc" %}selected{% endif %}>Highest Rated</option>
+        <option value="rating_asc" {% if sort == "rating_asc" %}selected{% endif %}>Lowest Rated</option>
+      </select>
+    </div>
+  </form>
+
+  <p class="text-sm text-gray-600 mb-4">
+    Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ total }} reviews
+  </p>
+
+  {% if page_obj.object_list %}
+    <ul class="space-y-4">
+      {% for r in page_obj.object_list %}
+        <li class="border rounded-xl p-4 hover:shadow-sm transition">
+          <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-2">
+            <div>
+              <a href="{% url 'restaurants:detail' r.restaurant.id %}" class="text-lg font-semibold hover:underline">
+                {{ r.restaurant.name }}
+              </a>
+              <div class="text-sm text-gray-500">
+                {% if r.created_at %}{{ r.created_at|date:"d M Y, H:i" }}{% endif %}
+              </div>
+            </div>
+            <div class="text-yellow-500 text-lg">
+              {% for i in "12345"|make_list %}
+                <span class="{% if forloop.counter <= r.rating %}text-yellow-500{% else %}text-gray-300{% endif %}">★</span>
+              {% endfor %}
+            </div>
+          </div>
+          {% if r.comment %}
+            <p class="mt-2 text-gray-800">{{ r.comment }}</p>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+
+    {# Pagination #}
+    <div class="mt-6 flex items-center justify-center gap-2">
+      {% if page_obj.has_previous %}
+        <a href="?q={{ q }}&sort={{ sort }}&page={{ page_obj.previous_page_number }}"
+           class="px-3 py-1 border rounded-lg hover:bg-gray-50">Sebelumnya</a>
+      {% endif %}
+      <span class="px-3 py-1 text-sm text-gray-600">
+        Halaman {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+      </span>
+      {% if page_obj.has_next %}
+        <a href="?q={{ q }}&sort={{ sort }}&page={{ page_obj.next_page_number }}"
+           class="px-3 py-1 border rounded-lg hover:bg-gray-50">Berikutnya</a>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="text-gray-600">Belum ada review. Mulai review restoran favoritmu!</div>
+  {% endif %}
+</div>
+{% endblock %}
