@@ -10,8 +10,8 @@ class Restaurant(models.Model):
     latitude = models.FloatField(null=True, blank=True) # map dari 'latitude'
     longitude = models.FloatField(null=True, blank=True)# map dari 'longitude'
     rating = models.FloatField(null=True, blank=True)   # boleh diisi / biarkan dihitung dari reviews
-    description = models.TextField(blank=True, null=True)
-    photo = models.ImageField(upload_to='resto_photos/', blank=True, null=True)
+    description = models.TextField(blank=True, null=True)   
+    photo = models.ImageField(upload_to='resto_photos/', blank=True, null=True, default='resto_photos/plataran.jpg')
     created_at = models.DateTimeField(auto_now_add=True)
 
     # === kolom baru agar cocok dengan file ===

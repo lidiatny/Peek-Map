@@ -1,88 +1,117 @@
-<!-- accounts/templates/accounts/login.html -->
 {% extends 'accounts/base.html' %}
+{% load static %}
 {% load form_extras %}
 {% block title %}Login{% endblock %}
 
-{% block content %}
-<div class="flex min-h-screen items-center justify-center px-4 py-12" data-aos="fade-up">
-    <div
-        class="max-w-md w-full space-y-8 bg-[#fffaf5] backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-red-200">
+{% block page_bg %}
+  <div class="pointer-events-none fixed inset-0 -z-10">
+    <!-- base cream -->
+    <div class="absolute inset-0 bg-[#FFF6F0]"></div>
+    <!-- blush + grain halus -->
+    <div class="absolute inset-0 opacity-90
+      bg-[radial-gradient(1200px_600px_at_15%_15%,rgba(242,204,204,0.45),transparent_60%),radial-gradient(900px_500px_at_85%_10%,rgba(154,30,34,0.10),transparent_55%),radial-gradient(700px_700px_at_10%_90%,rgba(0,102,41,0.06),transparent_60%)]"></div>
+    <!-- wave atas -->
+    <svg class="absolute top-0 left-0 right-0 w-full h-[120px] text-[#F2CCCC]" viewBox="0 0 1440 120" preserveAspectRatio="none">
+      <path fill="currentColor" d="M0,64L60,58.7C120,53,240,43,360,42.7C480,43,600,53,720,69.3C840,85,960,107,1080,112C1200,117,1320,107,1380,101.3L1440,96L1440,0L0,0Z"/>
+    </svg>
+    <!-- wave bawah -->
+    <svg class="absolute bottom-0 left-0 right-0 w-full h-[140px] text-[#F2CCCC]" viewBox="0 0 1440 140" preserveAspectRatio="none">
+      <path fill="currentColor" d="M0,64L60,85.3C120,107,240,149,360,149.3C480,149,600,107,720,90.7C840,75,960,85,1080,96C1200,107,1320,117,1380,122.7L1440,128L1440,140L0,140Z"/>
+    </svg>
+  </div>
+{% endblock %}
 
-        <div class="text-center">
-            <h2
-                class="mt-4 text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-800">
-                Login to your account
-            </h2>
-            <p class="mt-4 text-l font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-800">Peek at reviews, Map your next foodie spot.</p>
+
+{% block content %}
+<section class="relative py-10">
+  <!-- ===== AESTHETIC BACKGROUND (Style A) ===== -->
+  <div class="pointer-events-none absolute inset-0 -z-10">
+
+  </div>
+  <!-- ===== /BACKGROUND ===== -->
+
+  <div class="mx-auto max-w-5xl">
+    <div class="grid grid-cols-1 lg:grid-cols-2 overflow-hidden rounded-2xl border border-[#E5E7EB] shadow-sm bg-white">
+      <!-- Left: form panel -->
+      <div class="p-8 md:p-10">
+        <!-- breadcrumb/badge brand kecil -->
+        <h1 class="mt-3 text-2xl md:text-3xl font-semibold text-[#1F2937]">Welcome back!</h1>
+        <p class="mt-1 text-sm text-[#6B7280]">Peek at reviews, map your next foodie spot 🍜</p>
+
+        <!-- value points -->
+        <div class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-[#374151]">
+          <span class="inline-flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-[#006629]"></span> Save your favorite restaurants
+          </span>
+          <span class="inline-flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-[#006629]"></span> Interact with other foodies
+          </span>
         </div>
 
-        <form class="mt-8 space-y-6" method="post">
-  {% csrf_token %}
+        <form method="post" class="mt-6 space-y-5">
+          {% csrf_token %}
 
-  <div data-aos="fade-right" data-aos-delay="100">
-    <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700">Username</label>
-    {{ form.username|add_class:"mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-500" }}
-    <div class="text-pink-300 text-xs mt-1">{{ form.username.errors }}</div>
+          <!-- Username -->
+          <div>
+            <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-[#374151]">Username</label>
+            {{ form.username|add_class:"mt-1 w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#9A1E22] focus:border-[#9A1E22]" }}
+            {% if form.username.errors %}<p class="mt-1 text-xs text-red-600">{{ form.username.errors }}</p>{% endif %}
+          </div>
+
+          <!-- Password -->
+          <div>
+            <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-[#374151]">Password</label>
+            <div class="relative">
+              {{ form.password|add_class:"mt-1 w-full pr-11 px-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#9A1E22] focus:border-[#9A1E22]" }}
+              <!-- Eye toggle: perfectly centered -->
+              <button type="button"
+                      class="absolute inset-y-0 right-3 my-auto inline-flex h-9 w-9 items-center justify-center rounded-md text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#9A1E22]"
+                      aria-label="Show/Hide password"
+                      onclick="togglePassword('{{ form.password.id_for_label }}', this)">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                  <path stroke-width="1.6" d="M2 12s3.8-7 10-7 10 7 10 7-3.8 7-10 7S2 12 2 12Z"/>
+                  <circle cx="12" cy="12" r="3" stroke-width="1.6"/>
+                </svg>
+              </button>
+            </div>
+            {% if form.password.errors %}<p class="mt-1 text-xs text-red-600">{{ form.password.errors }}</p>{% endif %}
+          </div>
+
+          {% if form.non_field_errors %}
+            <div class="rounded-lg bg-red-50 text-red-700 text-sm p-3">{{ form.non_field_errors }}</div>
+          {% endif %}
+
+          <button type="submit"
+                  class="w-full inline-flex justify-center px-4 py-2.5 rounded-xl bg-[#006629] text-white font-medium hover:bg-[#055b23] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#006629] shadow-sm">
+            Login
+          </button>
+        </form>
+
+        <!-- centered register link -->
+        <p class="mt-5 text-center text-sm text-[#6B7280]">
+          Don’t have an account?
+          <a href="{% url 'accounts:register' %}" class="font-medium text-[#9A1E22] hover:underline">Register</a>
+        </p>
+      </div>
+
+      <!-- Right: brand image -->
+      <div class="relative">
+        <img src="{% static 'img/auth-hero.jpeg' %}" alt="" class="h-full w-full object-cover">
+        <div class="absolute inset-0 bg-[#9A1E22]/10"></div>
+      </div>
+    </div>
   </div>
+</section>
 
-  <div data-aos="fade-right" data-aos-delay="200" class="relative">
-    <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-gray-700">Password</label>
-    
-    {{ form.password|add_class:"mt-1 block w-full pr-10 px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-500" }}
-    
-    <!-- Icon 👁️ -->
-    <span 
-      class="absolute top-9 right-3 cursor-pointer text-gray-500 hover:text-gray-700" 
-      onclick="togglePassword('id_password', this)">
-      👁️
-    </span>
-
-    <div class="text-pink-300 text-xs mt-1">{{ form.password.errors }}</div>
-  </div>
-
-  <div data-aos="zoom-in" data-aos-delay="300">
-    <button type="submit"
-      class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transform hover:scale-105 transition-all duration-200 shadow-md">
-      <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-200" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd"
-            d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-            clip-rule="evenodd" />
-        </svg>
-      </span>
-      Login
-    </button>
-  </div>
-</form>
-
-<!-- Script Toggle Password -->
 <script>
-  function togglePassword(inputId, icon) {
-    const input = document.getElementById(inputId);
-    if (input.type === "password") {
-      input.type = "text";
-      icon.textContent = "🙈";
-    } else {
-      input.type = "password";
-      icon.textContent = "👁️";
-    }
+  function togglePassword(inputId, btn){
+    const el = document.getElementById(inputId);
+    if(!el) return;
+    const isPwd = el.type === 'password';
+    el.type = isPwd ? 'text' : 'password';
+    btn.innerHTML = isPwd
+      ? '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.6" d="M3 3l18 18"/><path stroke-width="1.6" d="M2 12s3.8-7 10-7c2.1 0 3.9.7 5.4 1.6M22 12s-3.8 7-10 7c-2.1 0-3.9-.7-5.4-1.6"/><circle cx="12" cy="12" r="3" stroke-width="1.6"/></svg>'
+      : '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.6" d="M2 12s3.8-7 10-7 10 7 10 7-3.8 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3" stroke-width="1.6"/></svg>';
   }
 </script>
-        <div class="text-center text-sm" data-aos="fade-up" data-aos-delay="400">
-            <span class="text-gray-400">Don’t have an account? </span>
-            <a href="{% url 'accounts:register' %}"
-                class="font-medium text-red-700 hover:text-red-800 transition duration-150">
-                Register now
-            </a>
-        </div>
-
-        <!-- Particles dekoratif -->
-        <div
-            class="absolute -top-8 -left-8 w-16 h-16 bg-gradient-to-r from-pink-400 to-purple-500 rounded-full opacity-10 blur-lg">
-        </div>
-        <div
-            class="absolute -bottom-8 -right-8 w-20 h-20 bg-gradient-to-r from-yellow-400 to-pink-500 rounded-full opacity-10 blur-xl">
-        </div>
-    </div>
-</div>
 {% endblock %}

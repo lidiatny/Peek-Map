@@ -1,0 +1,51 @@
+{% load static %}
+{# expects: restaurant, bookmarked_resto_ids (set of ids), user #}
+
+<article class="group relative bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow" data-aos="fade-up">
+  <div class="aspect-[16/10] w-full overflow-hidden rounded-t-2xl bg-gray-100">
+    {% if restaurant.photo %}
+      <img src="{{ restaurant.photo.url }}" alt="{{ restaurant.name }}"
+           class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300">
+    {% else %}
+      <img src="{% static 'img/placeholder_resto.svg' %}" alt="No photo"
+           class="h-full w-full object-cover">
+    {% endif %}
+  </div>
+
+  <div class="p-4">
+    <h3 class="text-base font-semibold text-gray-900 line-clamp-2">{{ restaurant.name }}</h3>
+
+    <div class="mt-1 flex items-center justify-between text-sm text-gray-600">
+      <span>{{ restaurant.city|default:restaurant.address|default:"" }}</span>
+      <span class="inline-flex items-center gap-1">
+        <svg class="h-4 w-4 text-yellow-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.035a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.035a1 1 0 00-1.176 0l-2.8 2.035c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.88 8.72c-.783-.57-.38-1.81.588-1.81H6.93a1 1 0 00.95-.69l1.07-3.292z"/></svg>
+        <span class="font-medium text-gray-800">{{ restaurant.rating_avg|default:0|floatformat:"1" }}</span>
+        <span class="text-gray-500">({{ restaurant.reviews_cnt|default:0 }} reviews)</span>
+      </span>
+    </div>
+
+    <div class="mt-3 flex items-center justify-between">
+      <a href="{% url 'restaurants:detail' restaurant.id %}"
+         class="inline-flex items-center px-3 py-2 rounded-lg bg-[#9A1E22] text-white text-sm font-medium hover:bg-[#7F1A1D] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#9A1E22]">
+        Detail
+      </a>
+
+      <form method="POST" action="{% url 'accounts:toggle_bookmark' restaurant.id %}" class="inline">
+        {% csrf_token %}
+        <button type="submit"
+                class="inline-flex items-center gap-1 px-2.5 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#9A1E22]">
+          <svg class="h-5 w-5 {% if restaurant.id in bookmarked_resto_ids %}text-rose-600{% else %}text-gray-400{% endif %}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-1.313-.742 25.18 25.18 0 01-4.187-3.047C3.223 14.892 1.5 12.28 1.5 9.347 1.5 6.78 3.56 4.75 6.053 4.75c1.482 0 2.882.667 3.897 1.75a5.66 5.66 0 013.897-1.75c2.492 0 4.553 2.03 4.553 4.597 0 2.933-1.723 5.545-4.616 7.76a25.175 25.175 0 01-4.187 3.047 15.247 15.247 0 01-1.313.742l-.022.012-.007.003a.75.75 0 01-.658 0z"/></svg>
+          <span class="hidden sm:inline">
+            {% if restaurant.id in bookmarked_resto_ids %}Saved{% else %}Save{% endif %}
+          </span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  {% if restaurant.id in bookmarked_resto_ids %}
+  <span class="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-[#9A1E22] shadow">
+    Saved
+  </span>
+  {% endif %}
+</article>
