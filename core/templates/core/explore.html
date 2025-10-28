@@ -2,42 +2,36 @@
 {% extends 'accounts/base.html' %}
 {% load static %}
 
-{% block title %}Discover{% endblock %}
+{% block title %}Dishcover{% endblock %}
+
+{% block page_bg %}
+<div class="pointer-events-none fixed inset-0 -z-10">
+  <div class="absolute inset-0 bg-[#FFF6F0]"></div>
+  <div class="absolute inset-0 opacity-90
+    bg-[radial-gradient(1200px_600px_at_15%_15%,rgba(242,204,204,0.45),transparent_60%),radial-gradient(900px_500px_at_85%_10%,rgba(154,30,34,0.10),transparent_55%),radial-gradient(700px_700px_at_10%_90%,rgba(0,102,41,0.06),transparent_60%)]"></div>
+  <svg class="absolute top-0 left-0 right-0 w-full h-[120px] text-[#F2CCCC]" viewBox="0 0 1440 120" preserveAspectRatio="none">
+    <path fill="currentColor" d="M0,64L60,58.7C120,53,240,43,360,42.7C480,43,600,53,720,69.3C840,85,960,107,1080,112C1200,117,1320,107,1380,101.3L1440,96L1440,0L0,0Z"/>
+  </svg>
+  <svg class="absolute bottom-0 left-0 right-0 w-full h-[140px] text-[#F2CCCC]" viewBox="0 0 1440 140" preserveAspectRatio="none">
+    <path fill="currentColor" d="M0,64L60,85.3C120,107,240,149,360,149.3C480,149,600,107,720,90.7C840,75,960,85,1080,96C1200,107,1320,117,1380,122.7L1440,128L1440,140L0,140Z"/>
+  </svg>
+</div>
+{% endblock %}
 
 {% block content %}
 <section class="py-10 px-6">
   <div class="max-w-7xl mx-auto">
     <h1 class="text-[34px] font-semibold tracking-tight text-gray-900 mb-3 text-center">
-      Discover
+      Dishcover
     </h1>
 
     {% with current=tab|default:'all' %}
-    <!-- Tabs -->
     <div class="flex items-center justify-center gap-2 border-b border-gray-200 mb-6 overflow-x-auto">
-      <a href="?tab=all"
-         class="px-4 py-2 rounded-full text-sm font-medium {% if current == 'all' %}text-[#9A1E22] bg-[#9A1E22]/10{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
-        All
-      </a>
-
-      <a href="?tab=recommendation"
-         class="px-4 py-2 rounded-full text-sm font-medium {% if current == 'recommendation' %}text-[#9A1E22] bg-[#9A1E22]/10{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
-        Recommendation
-      </a>
-
-      <a href="?tab=top_rated"
-         class="px-4 py-2 rounded-full text-sm font-medium {% if current == 'top_rated' %}text-[#9A1E22] bg-[#9A1E22]/10{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
-        Top Rated
-      </a>
-
-      <a href="?tab=near_you"
-         class="px-4 py-2 rounded-full text-sm font-medium {% if current == 'near_you' %}text-[#9A1E22] bg-[#9A1E22]/10{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
-        Near You
-      </a>
-
-      <a href="?tab=saved"
-         class="px-4 py-2 rounded-full text-sm font-medium {% if current == 'saved' %}text-[#9A1E22] bg-[#9A1E22]/10{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
-        Saved
-      </a>
+      <a href="?tab=all" class="px-4 py-2 rounded-full text-sm font-medium {% if current == 'all' %}text-[#9A1E22] bg-[#9A1E22]/10{% else %}text-gray-700 hover:bg-gray-100{% endif %}">All</a>
+      <a href="?tab=recommendation" class="px-4 py-2 rounded-full text-sm font-medium {% if current == 'recommendation' %}text-[#9A1E22] bg-[#9A1E22]/10{% else %}text-gray-700 hover:bg-gray-100{% endif %}">Recommendation</a>
+      <a href="?tab=top_rated" class="px-4 py-2 rounded-full text-sm font-medium {% if current == 'top_rated' %}text-[#9A1E22] bg-[#9A1E22]/10{% else %}text-gray-700 hover:bg-gray-100{% endif %}">Top Rated</a>
+      <a href="?tab=near_you" class="px-4 py-2 rounded-full text-sm font-medium {% if current == 'near_you' %}text-[#9A1E22] bg-[#9A1E22]/10{% else %}text-gray-700 hover:bg-gray-100{% endif %}">Near You</a>
+      <a href="?tab=saved" class="px-4 py-2 rounded-full text-sm font-medium {% if current == 'saved' %}text-[#9A1E22] bg-[#9A1E22]/10{% else %}text-gray-700 hover:bg-gray-100{% endif %}">Saved</a>
     </div>
     {% endwith %}
 
@@ -49,12 +43,37 @@
         <p class="text-sm text-gray-600 col-span-1 sm:col-span-2 lg:col-span-3 text-center">No restaurants to display yet.</p>
       {% endfor %}
     </section>
+
+    <!-- Pagination -->
+    {% if page_obj and page_obj.paginator.num_pages > 1 %}
+      <div class="mt-8 flex items-center justify-center gap-2">
+        {% if page_obj.has_previous %}
+          <a href="?tab={{ tab }}&page={{ page_obj.previous_page_number }}"
+             class="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+            Previous
+          </a>
+        {% endif %}
+
+        {% for i in page_obj.paginator.page_range %}
+          {% if i == page_obj.number %}
+            <span class="rounded-xl border border-[#006629] bg-[#006629]/10 text-[#006629] px-4 py-2 text-sm">{{ i }}</span>
+          {% else %}
+            <a href="?tab={{ tab }}&page={{ i }}"
+               class="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+               {{ i }}
+            </a>
+          {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+          <a href="?tab={{ tab }}&page={{ page_obj.next_page_number }}"
+             class="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+            Next
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+
   </div>
 </section>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-  AOS.init({ duration: 600 });
-</script>
 {% endblock %}

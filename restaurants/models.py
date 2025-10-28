@@ -1,7 +1,13 @@
 from django.db import models
 from django.apps import apps
+import os
+from django.conf import settings
 from django.db.models import Avg, Value
 from django.db.models.functions import Coalesce
+
+def default_resto_photo_path():
+    # path relatif terhadap MEDIA_ROOT
+    return "resto_photos/default.jpeg"
 
 class Restaurant(models.Model):
     # === kolom lama ===
@@ -11,8 +17,16 @@ class Restaurant(models.Model):
     longitude = models.FloatField(null=True, blank=True)# map dari 'longitude'
     rating = models.FloatField(null=True, blank=True)   # boleh diisi / biarkan dihitung dari reviews
     description = models.TextField(blank=True, null=True)   
-    photo = models.ImageField(upload_to='resto_photos/', blank=True, null=True, default='resto_photos/plataran.jpg')
+    photo = models.ImageField(upload_to='resto_photos/', blank=True, null=True, default='resto_photos/default.jpeg')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def display_photo_url(self):
+        # Jika ada file yg valid, gunakan itu
+        if self.photo and hasattr(self.photo, "media/resto_photos/default.jpeg"):
+            return self.photo.url
+        # fallback ke default di MEDIA_URL
+        return settings.MEDIA_URL + default_resto_photo_path()
 
     # === kolom baru agar cocok dengan file ===
     # resto_id eksternal dari file; simpan terpisah supaya gak bentrok PK internal

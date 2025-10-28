@@ -2,81 +2,145 @@
 {% extends "accounts/base.html" %}
 {% load static %}
 
-{% block title %}My Review History{% endblock %}
+{% block title %}My Review History — Peek & Map{% endblock %}
+
+{# ===== Brand background seperti home ===== #}
+{% block page_bg %}
+<div class="pointer-events-none fixed inset-0 -z-10">
+  <div class="absolute inset-0 bg-[#FFF6F0]"></div>
+  <div class="absolute inset-0 opacity-90
+    bg-[radial-gradient(1200px_600px_at_15%_15%,rgba(242,204,204,0.45),transparent_60%),radial-gradient(900px_500px_at_85%_10%,rgba(154,30,34,0.10),transparent_55%),radial-gradient(700px_700px_at_10%_90%,rgba(0,102,41,0.06),transparent_60%)]"></div>
+  <svg class="absolute top-0 left-0 right-0 w-full h-[120px] text-[#F2CCCC]" viewBox="0 0 1440 120" preserveAspectRatio="none">
+    <path fill="currentColor" d="M0,64L60,58.7C120,53,240,43,360,42.7C480,43,600,53,720,69.3C840,85,960,107,1080,112C1200,117,1320,107,1380,101.3L1440,96L1440,0L0,0Z"/>
+  </svg>
+  <svg class="absolute bottom-0 left-0 right-0 w-full h-[140px] text-[#F2CCCC]" viewBox="0 0 1440 140" preserveAspectRatio="none">
+    <path fill="currentColor" d="M0,64L60,85.3C120,107,240,149,360,149.3C480,149,600,107,720,90.7C840,75,960,85,1080,96C1200,107,1320,117,1380,122.7L1440,128L1440,140L0,140Z"/>
+  </svg>
+</div>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto px-4 py-6 text-black">
-  <h1 class="text-2xl font-semibold mb-4">Review History</h1>
+<main class="relative">
+  <section class="pt-10 px-4">
+    <div class="max-w-7xl mx-auto">
 
-  <form method="get" class="flex flex-col md:flex-row gap-3 md:items-center justify-between mb-4">
-    <div class="flex gap-2">
-      <input
-        type="text"
-        name="q"
-        value="{{ q }}"
-        placeholder="Cari restoran / komentar…"
-        class="border rounded-lg px-3 py-2 w-72"
-      />
-      <button class="px-4 py-2 rounded-lg border hover:bg-gray-50">Search</button>
-    </div>
+      {# ===== Header (Center) ===== #}
+      <div class="mb-6 text-center">
+        <h1 class="text-3xl md:text-4xl font-semibold text-[#1F2937]">Your Review History</h1>
+        <p class="text-[#374151] mt-1">Track and revisit all your foodie thoughts ✨</p>
+      </div>
 
-    <div class="flex items-center gap-2">
-      <label for="sort" class="text-sm text-black-600">Sort by:</label>
-      <select name="sort" id="sort" onchange="this.form.submit()" class="border rounded-lg px-3 py-2">
-        <option value="latest" {% if sort == "latest" %}selected{% endif %}>Most Recent</option>
-        <option value="oldest" {% if sort == "oldest" %}selected{% endif %}>Oldest Rating</option>
-        <option value="rating_desc" {% if sort == "rating_desc" %}selected{% endif %}>Highest Rated</option>
-        <option value="rating_asc" {% if sort == "rating_asc" %}selected{% endif %}>Lowest Rated</option>
-      </select>
-    </div>
-  </form>
+      {# ===== Search & Sort (Full width search) ===== #}
+      <form method="get"
+          class="bg-white/80 backdrop-blur rounded-2xl border border-red-100 shadow-sm px-4 py-3 md:px-5 md:py-4 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
 
-  <p class="text-sm text-gray-600 mb-4">
-    Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ total }} reviews
-  </p>
+        <!-- SEARCH BAR FULL WIDTH -->
+        <div class="flex w-full md:flex-1 items-center gap-2 bg-white rounded-xl border border-gray-200 px-4 py-2">
+          <svg class="h-5 w-5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0Z"/>
+          </svg> 
+          <input type="text" name="q" value="{{ q|default:'' }}"
+                placeholder="Search restaurant or comment…"
+                class="flex-1 bg-transparent outline-none text-gray-900 placeholder-gray-500">
+        </div>
 
-  {% if page_obj.object_list %}
-    <ul class="space-y-4">
-      {% for r in page_obj.object_list %}
-        <li class="border rounded-xl p-4 hover:shadow-sm transition">
-          <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-2">
-            <div>
-              <a href="{% url 'restaurants:detail' r.restaurant.id %}" class="text-lg font-semibold hover:underline">
-                {{ r.restaurant.name }}
-              </a>
-              <div class="text-sm text-gray-500">
-                {% if r.created_at %}{{ r.created_at|date:"d M Y, H:i" }}{% endif %}
+        <!-- SORT BY -->
+        <div class="flex items-center gap-2 shrink-0">
+          <label for="sort" class="text-sm text-gray-700">Sort by</label>
+          <select name="sort" id="sort" onchange="this.form.submit()"
+                  class="rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-900">
+            <option value="latest"      {% if sort == "latest" %}selected{% endif %}>Most Recent</option>
+            <option value="oldest"      {% if sort == "oldest" %}selected{% endif %}>Oldest</option>
+            <option value="rating_desc" {% if sort == "rating_desc" %}selected{% endif %}>Highest Rated</option>
+            <option value="rating_asc"  {% if sort == "rating_asc" %}selected{% endif %}>Lowest Rated</option>
+          </select>
+        </div>
+      </form>
+
+      {# ===== Meta ===== #}
+      <p class="text-sm text-gray-600 mt-3">
+        Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ total }} reviews
+      </p>
+
+      {# ===== Grid Cards ===== #}
+      {% if page_obj.object_list %}
+      <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for r in page_obj.object_list %}
+          <article class="group bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition overflow-hidden">
+            {# Foto restoran (fallback ke display_photo_url atau placeholder) #}
+            <div class="relative h-44 bg-gray-100">
+              {% if r.restaurant.photo %}
+                <img src="{{ r.restaurant.photo.url }}" alt="{{ r.restaurant.name }}"
+                     class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+              {% elif r.restaurant.display_photo_url %}
+                <img src="{{ r.restaurant.display_photo_url }}" alt="{{ r.restaurant.name }}"
+                     class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+              {% else %}
+                <img src="{% static 'img/placeholder_resto.svg' %}" alt="No photo"
+                     class="absolute inset-0 w-full h-full object-cover opacity-90">
+              {% endif %}
+              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition"></div>
+
+              <span class="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-[#9A1E22] shadow">
+                {{ r.created_at|date:"d M Y" }}
+              </span>
+            </div>
+
+            <div class="p-4">
+              <div class="flex items-start justify-between gap-3">
+                <a href="{% url 'restaurants:detail' r.restaurant.id %}"
+                   class="text-base font-semibold text-gray-900 hover:underline line-clamp-2">
+                  {{ r.restaurant.name }}
+                </a>
+                <div class="flex text-yellow-500 text-sm shrink-0">
+                  {% for i in "12345"|make_list %}
+                    <span class="{% if forloop.counter <= r.rating %}text-yellow-500{% else %}text-gray-300{% endif %}">★</span>
+                  {% endfor %}
+                </div>
+              </div>
+
+              {% if r.comment %}
+                <p class="mt-2 text-gray-700 line-clamp-3">{{ r.comment }}</p>
+              {% endif %}
+
+              <div class="mt-4 flex items-center justify-between">
+                <span class="text-xs text-gray-500">
+                  {% if r.created_at %}{{ r.created_at|date:"d M Y, H:i" }}{% endif %}
+                </span>
+                <a href="{% url 'restaurants:detail' r.restaurant.id %}"
+                   class="inline-flex items-center gap-2 rounded-lg bg-[#006629] text-white text-sm px-3 py-2 hover:bg-[#055b23]">
+                    Detail
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </a>
               </div>
             </div>
-            <div class="text-yellow-500 text-lg">
-              {% for i in "12345"|make_list %}
-                <span class="{% if forloop.counter <= r.rating %}text-yellow-500{% else %}text-gray-300{% endif %}">★</span>
-              {% endfor %}
-            </div>
-          </div>
-          {% if r.comment %}
-            <p class="mt-2 text-gray-800">{{ r.comment }}</p>
-          {% endif %}
-        </li>
-      {% endfor %}
-    </ul>
+          </article>
+        {% endfor %}
+      </div>
 
-    {# Pagination #}
-    <div class="mt-6 flex items-center justify-center gap-2">
-      {% if page_obj.has_previous %}
-        <a href="?q={{ q }}&sort={{ sort }}&page={{ page_obj.previous_page_number }}"
-           class="px-3 py-1 border rounded-lg hover:bg-gray-50">Sebelumnya</a>
-      {% endif %}
-      <span class="px-3 py-1 text-sm text-gray-600">
-        Halaman {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
-      </span>
-      {% if page_obj.has_next %}
-        <a href="?q={{ q }}&sort={{ sort }}&page={{ page_obj.next_page_number }}"
-           class="px-3 py-1 border rounded-lg hover:bg-gray-50">Berikutnya</a>
+      {# ===== Pagination ===== #}
+      <div class="mt-8 flex items-center justify-center gap-2">
+        {% if page_obj.has_previous %}
+          <a href="?q={{ q }}&sort={{ sort }}&page={{ page_obj.previous_page_number }}"
+             class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Previous</a>
+        {% endif %}
+        <span class="px-3 py-2 text-sm text-gray-700 bg-white rounded-xl border border-gray-200">
+          Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+        </span>
+        {% if page_obj.has_next %}
+          <a href="?q={{ q }}&sort={{ sort }}&page={{ page_obj.next_page_number }}"
+             class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Next</a>
+        {% endif %}
+      </div>
+
+      {% else %}
+        <div class="mt-6 bg-white/80 backdrop-blur rounded-2xl border border-gray-200 p-6 text-center text-gray-700">
+          No reviews yet. Start reviewing your favorite restaurants!
+        </div>
       {% endif %}
     </div>
-  {% else %}
-    <div class="text-gray-600">Belum ada review. Mulai review restoran favoritmu!</div>
-  {% endif %}
-</div>
+  </section>
+</main>
 {% endblock %}

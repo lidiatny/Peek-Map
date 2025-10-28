@@ -51,11 +51,12 @@
 
 {% block content %}
 <!-- Hero Section -->
+<!-- Hero Section -->
 <section class="px-6 py-6">
-  <div
-    class="hero-bg {% if not restaurant.photo %}hero-bg-no-photo{% endif %} relative rounded-xl overflow-hidden shadow-lg"
-    {% if restaurant.photo %}style="background-image: url('{{ restaurant.photo.url }}');" {% endif %}>
-    <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+  <div class="relative rounded-xl overflow-hidden shadow-lg h-64 md:h-80 bg-gray-200">
+    <img src="{{ restaurant.display_photo_url }}" alt="{{ restaurant.name }}" class="h-40 w-full object-cover rounded-t-xl">
+    <div class="absolute inset-0 bg-black/40"></div>
+
     <div class="relative px-6 py-8 text-white">
       <h1 class="text-3xl font-bold">{{ restaurant.name }}</h1>
       <div class="flex items-center mt-2 space-x-4">
@@ -65,10 +66,9 @@
         <span class="text-sm">{{ review_count }} reviews</span>
       </div>
       <p class="mt-1 text-sm flex items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
-          stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
         {{ restaurant.address }}
@@ -76,6 +76,7 @@
     </div>
   </div>
 </section>
+
 
 <!-- Location Section -->
 <section class="px-6 py-8 rounded-lg max-w-5xl mx-auto">
@@ -142,7 +143,7 @@
         {% endfor %}
       </div>
       {% else %}
-      <p class="text-gray-500 text-center mt-6">Belum ada menu untuk restoran ini.</p>
+      <p class="text-gray-500 text-center mt-6">There are no menus available for this restaurant yet.</p>
       {% endif %}
     </div>
 
@@ -216,7 +217,8 @@
                 <label class="block text-sm font-medium mb-2 text-gray-900">Photo (Optional)</label>
                 <input type="file" name="photo" accept="image/*"
                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900">
-                <p class="text-xs text-gray-500 mt-1">Upload a photo of your dining experience (JPG, PNG, max 5MB)</p>
+                <p class="text-xs text-gray-600">
+                </p>
               </div>
 
               <button type="submit"
@@ -308,7 +310,7 @@
             {% endif %}
           </div>
           {% empty %}
-          <p class="text-gray-500">Belum ada ulasan.</p>
+          <p class="text-gray-500">No Reviews Yet.</p>
           {% endfor %}
         </div>
 

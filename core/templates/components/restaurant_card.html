@@ -2,13 +2,12 @@
 {# expects: restaurant, bookmarked_resto_ids (set of ids), user #}
 
 <article class="group relative bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow" data-aos="fade-up">
-  <div class="aspect-[16/10] w-full overflow-hidden rounded-t-2xl bg-gray-100">
+  <div class="w-full overflow-hidden rounded-t-2xl bg-gray-100">
     {% if restaurant.photo %}
       <img src="{{ restaurant.photo.url }}" alt="{{ restaurant.name }}"
            class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300">
     {% else %}
-      <img src="{% static 'img/placeholder_resto.svg' %}" alt="No photo"
-           class="h-full w-full object-cover">
+      <img src="{{ resto.display_photo_url }}" alt="{{ resto.name }}" class="h-40 w-full object-cover rounded-t-xl">
     {% endif %}
   </div>
 

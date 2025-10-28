@@ -1,18 +1,15 @@
 # core/views.py
-from django.shortcuts import render
-from django.db.models import Avg, Count
+from django.shortcuts import render, redirect
+from django.db.models import Avg, Value, Count, Case, When, IntegerField
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-
+from django.core.paginator import Paginator
 from django.db.models.functions import Coalesce
-
 from restaurants.models import Restaurant, Menu
 from reviews.models import Review
-from accounts.models import Bookmark
-
-from .recommendations import simple_recommendation
 from .utils import track_user_activity, get_recently_viewed_restaurants
 from django.db.models import Q
+from accounts.models import Bookmark
+from .recommendations import simple_recommendation
 
 
 def home(request):
@@ -116,76 +113,80 @@ def home(request):
     }
     return render(request, 'core/home.html', context)
 
+def _ids_from_recommendation(rec):
+    """
+    Terima apa saja dari simple_recommendation:
+    - QuerySet Restaurant
+    - list Restaurant
+    - list id (int/str)
+    Balikin list[int] berisi ID valid.
+    """
+    if hasattr(rec, "values_list"):
+        return list(rec.values_list("id", flat=True))
+    ids = []
+    for item in (rec or []):
+        if hasattr(item, "id"):           # Restaurant instance
+            ids.append(item.id)
+        else:
+            try:
+                ids.append(int(item))     # already id-like
+            except (TypeError, ValueError):
+                continue
+    return ids
 
+@login_required(login_url="/accounts/login/")
 def explore(request):
-    tab = request.GET.get('tab', 'recommendation')
-    context = {'tab': tab}
+    tab = (request.GET.get("tab") or "all").strip()
+    user = request.user
 
-    if request.user.is_authenticated:
-        context['bookmarked_resto_ids'] = list(
-            Bookmark.objects.filter(user=request.user).values_list('restaurant_id', flat=True)
-        )
+    # base queryset
+    qs = Restaurant.objects.all()
 
-    if tab == 'recommendation' and request.user.is_authenticated:
-        # simple_recommendation mungkin balikin list/qs tanpa annotate.
-        base = simple_recommendation(request.user)
-        ids = [r.id for r in base]             # aman untuk list/qs
-        context['restaurants'] = (
-            Restaurant.objects.filter(id__in=ids)
-            .annotate(
-                rating_avg=Coalesce(Avg('reviews__rating'), 0.0),
-                reviews_cnt=Count('reviews', distinct=True)
+    if tab == "recommendation":
+        rec_raw = simple_recommendation(user) or []
+        rec_ids = _ids_from_recommendation(rec_raw)
+
+        if rec_ids:
+            ordering = Case(
+                *[When(id=pk, then=pos) for pos, pk in enumerate(rec_ids)],
+                output_field=IntegerField()
             )
-        )
+            qs = Restaurant.objects.filter(id__in=rec_ids).order_by(ordering)
+        else:
+            qs = Restaurant.objects.none()
 
-    elif tab == 'top_rated':
-        context['restaurants'] = (
-            Restaurant.objects
-            .annotate(
-                rating_avg=Coalesce(Avg('reviews__rating'), 0.0),
-                reviews_cnt=Count('reviews', distinct=True)
-            )
-            .filter(rating_avg__gt=0)
-            .order_by('-rating_avg')[:20]
-        )
+    elif tab == "top_rated":
+        qs = qs.annotate(avg=Coalesce(Avg("reviews__rating"), 0.0)).order_by("-avg")
 
-    elif tab == 'near_you':
-        context['restaurants'] = (
-            Restaurant.objects
-            .annotate(
-                rating_avg=Coalesce(Avg('reviews__rating'), 0.0),
-                reviews_cnt=Count('reviews', distinct=True)
-            )
-            .order_by('?')[:20]
-        )
+    elif tab == "near_you":
+        qs = qs.order_by("?")
 
-    elif tab == 'all':
-        qs = (
-            Restaurant.objects
-            .annotate(
-                rating_avg=Coalesce(Avg('reviews__rating'), 0.0),
-                # jangan pakai nama field asli kalau kamu memang punya field review_count di model
-                reviews_cnt=Count('reviews', distinct=True)
-            )
-            .order_by('name')
-        )
-        paginator = Paginator(qs, 12)
-        page = request.GET.get('page', 1)
-        try:
-            restaurants_page = paginator.page(page)
-        except PageNotAnInteger:
-            restaurants_page = paginator.page(1)
-        except EmptyPage:
-            restaurants_page = paginator.page(paginator.num_pages)
-        context['restaurants'] = restaurants_page
+    elif tab == "saved":
+        saved_ids = Bookmark.objects.filter(user=user).values_list("restaurant_id", flat=True)
+        qs = qs.filter(id__in=saved_ids)
 
-    elif tab == 'saved' and request.user.is_authenticated:
-        bookmarks = Bookmark.objects.filter(user=request.user).select_related('restaurant')
-        restos = [b.restaurant for b in bookmarks]
-        for r in restos:
-            reviews = r.reviews.all()   # kalau kamu pakai related_name='reviews', ganti ke r.reviews.all()
-            r.reviews_cnt = reviews.count()
-            r.rating_avg = round(sum((rv.rating or 0) for rv in reviews) / len(reviews), 1) if reviews else 0.0
-        context['restaurants'] = restos
+    else:  # "all"
+        qs = qs.order_by("name")
 
-    return render(request, 'core/explore.html', context)
+    # pastikan semua queryset punya field yang dipakai di template card
+    qs = qs.annotate(
+        rating_avg=Coalesce(Avg("reviews__rating"), 0.0),
+        reviews_cnt=Count("reviews", distinct=True),
+    )
+
+    # pagination
+    paginator = Paginator(qs, 9)  # 9 cards per page
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    # saved state utk tombol "Save"
+    bookmarked_resto_ids = set(
+        Bookmark.objects.filter(user=user).values_list("restaurant_id", flat=True)
+    )
+
+    return render(request, "core/explore.html", {
+        "tab": tab,
+        "restaurants": page_obj,
+        "page_obj": page_obj,
+        "bookmarked_resto_ids": bookmarked_resto_ids,
+    })
