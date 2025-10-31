@@ -51,6 +51,7 @@
             <div class="h-6 w-px bg-gray-200 hidden md:block"></div>
 
             <select name="category" class="bg-transparent outline-none text-gray-900 px-2 py-2">
+          
               <option value="">All Categories</option>
               {% for cat in categories %}
                 <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
@@ -89,7 +90,7 @@
         {% for resto in resto_results %}
           <a href="{% url 'restaurants:detail' resto.id %}"
              class="mb-6 break-inside-avoid block rounded-2xl bg-white border border-gray-200 shadow-sm hover:shadow-md transition">
-            <img src="{{ restaurant.display_photo_url }}" alt="{{ restaurant.name }}" class="h-40 w-full object-cover rounded-t-xl">
+            <img src="{{ resto.display_photo_url }}" alt="{{ restaurant.name }}" class="h-40 w-full object-cover rounded-t-xl">
             <div class="p-4">
               <h3 class="font-semibold text-gray-900">{{ resto.name }}</h3>
               {% if resto.type %}<p class="text-xs text-gray-600 mt-0.5">{{ resto.type }}</p>{% endif %}

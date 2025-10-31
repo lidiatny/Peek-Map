@@ -1,4 +1,3 @@
-# core/views.py
 from django.shortcuts import render, redirect
 from django.db.models import Q, Avg, F, Value, FloatField, Count, Case, When, IntegerField
 from django.contrib.auth.decorators import login_required
@@ -16,57 +15,61 @@ def home(request):
     category = (request.GET.get('category') or '').strip()
     min_rating = (request.GET.get('min_rating') or '').strip()
 
+    # normalize UI category → database field value
     CATEGORY_MAP = {
         'China': 'Chinese',
+        'Chinese': 'Chinese',
         'Jepang': 'Japanese',
+        'Japanese': 'Japanese',
         'Western': 'Western',
         'Indonesia': 'Indonesian',
-        'Italian': 'Italian',
+        'Indonesian': 'Indonesian',
     }
 
     canon_cat = CATEGORY_MAP.get(category, category).strip()
 
+    # start with all restaurants
     resto_results = Restaurant.objects.all()
     menu_results = Menu.objects.none()
 
-    # === Search & filters ===
-    if query or category or min_rating:
+    # === CATEGORY FILTER ALWAYS RUNS ===
+    if canon_cat and canon_cat.lower() not in ('all', 'all categories', 'semua'):
+        resto_results = resto_results.filter(cuisine_type__iexact=canon_cat)
 
-        if query:
-            if request.user.is_authenticated:
-                track_user_activity(request.user, 'search', search_query=query)
-            resto_results = (
-                Restaurant.objects
-                .filter(
-                    Q(name__icontains=query) |
-                    Q(menus__name__icontains=query)   # reverse FK Menu -> Restaurant
-                )
-                .distinct()
+    # === SEARCH / KEYWORD ===
+    if query:
+        if request.user.is_authenticated:
+            track_user_activity(request.user, 'search', search_query=query)
+
+        resto_results = resto_results.filter(
+            Q(name__icontains=query) |
+            Q(menus__name__icontains=query)
+        ).distinct()
+
+        menu_results = Menu.objects.filter(name__icontains=query).select_related('restaurant')
+
+    # === MIN RATING ===
+    if min_rating:
+        clean = ''.join(ch for ch in str(min_rating) if ch.isdigit() or ch == '.')
+        try:
+            thr = float(clean)
+        except ValueError:
+            thr = 0.0
+
+        resto_results = (
+            resto_results
+            .annotate(
+                rating_avg=Coalesce(Avg('reviews__rating'), Value(0.0), output_field=FloatField()),
             )
-            menu_results = Menu.objects.filter(name__icontains=query).select_related('restaurant')
+            .filter(rating_avg__gte=thr)
+        )
 
-            if canon_cat and canon_cat.lower() not in ('all', 'all categories', 'semua'):
-                resto_results = resto_results.filter(cuisine_type__icontains=canon_cat)
-
-        if min_rating:
-            clean = ''.join(ch for ch in str(min_rating) if ch.isdigit() or ch == '.')
-            try:
-                thr = float(clean)
-            except ValueError:
-                thr = 0.0
-
-            resto_results = (
-                resto_results
-                .annotate(
-                    rating_avg=Coalesce(Avg('reviews__rating'), Value(0.0), output_field=FloatField()),
-                    effective_rating=Coalesce(Avg('reviews__rating'), F('rating'), Value(0.0), output_field=FloatField())
-                )
-                .filter(rating_avg__gte=thr)
-            )
-    else:
+    # if user not searching anything → no results
+    if not query and not category and not min_rating:
         resto_results = Restaurant.objects.none()
         menu_results = Menu.objects.none()
 
+    # === Data for other sections ===
     restaurants_all = Restaurant.objects.all()
 
     top_rated = (
@@ -76,10 +79,8 @@ def home(request):
         .order_by('-rating_avg')[:5]
     )
 
-    # random recent reviews
     last_reviews = Review.objects.select_related('user', 'restaurant').order_by('?')[:5]
 
-    # map data
     restaurants_data = []
     for resto in restaurants_all:
         try:
@@ -91,6 +92,7 @@ def home(request):
             })
         except (ValueError, TypeError, AttributeError):
             continue
+
     restaurants_json = restaurants_data
 
     recently_viewed = get_recently_viewed_restaurants(request.user) if request.user.is_authenticated else []
@@ -107,38 +109,35 @@ def home(request):
         'restaurants_all': restaurants_all,
         'restaurants_json': restaurants_json,
         'bookmarked_resto_ids': [],
-        'categories': ['China', 'Jepang', 'Western', 'Indonesia', 'Italian'],
+        'categories': ['Chinese', 'Japanese', 'Western', 'Indonesian'],  # dropdown values
         'recently_viewed': recently_viewed,
     }
+
     return render(request, 'core/home.html', context)
 
+
+# ----------------- RECOMMENDATION SECTION --------------------
+
 def _ids_from_recommendation(rec):
-    """
-    Terima apa saja dari simple_recommendation:
-    - QuerySet Restaurant
-    - list Restaurant
-    - list id (int/str)
-    Balikin list[int] berisi ID valid.
-    """
     if hasattr(rec, "values_list"):
         return list(rec.values_list("id", flat=True))
     ids = []
     for item in (rec or []):
-        if hasattr(item, "id"):           # Restaurant instance
+        if hasattr(item, "id"):
             ids.append(item.id)
         else:
             try:
-                ids.append(int(item))     # already id-like
+                ids.append(int(item))
             except (TypeError, ValueError):
                 continue
     return ids
+
 
 @login_required(login_url="/accounts/login/")
 def explore(request):
     tab = (request.GET.get("tab") or "all").strip()
     user = request.user
 
-    # base queryset
     qs = Restaurant.objects.all()
 
     if tab == "recommendation":
@@ -164,21 +163,18 @@ def explore(request):
         saved_ids = Bookmark.objects.filter(user=user).values_list("restaurant_id", flat=True)
         qs = qs.filter(id__in=saved_ids)
 
-    else:  # "all"
+    else:
         qs = qs.order_by("name")
 
-    # pastikan semua queryset punya field yang dipakai di template card
     qs = qs.annotate(
         rating_avg=Coalesce(Avg("reviews__rating"), 0.0),
         reviews_cnt=Count("reviews", distinct=True),
     )
 
-    # pagination
-    paginator = Paginator(qs, 9)  # 9 cards per page
+    paginator = Paginator(qs, 9)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    # saved state utk tombol "Save"
     bookmarked_resto_ids = set(
         Bookmark.objects.filter(user=user).values_list("restaurant_id", flat=True)
     )
