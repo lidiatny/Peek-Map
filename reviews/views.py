@@ -7,42 +7,41 @@ from restaurants.models import Restaurant
 from .models import Review, ReviewReply
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.urls import reverse
 
 @login_required
 def write_review(request, restaurant_id):
     restaurant = get_object_or_404(Restaurant, id=restaurant_id)
 
-    # Cek apakah user sudah pernah review restoran ini
-    existing_review = Review.objects.filter(user=request.user, restaurant=restaurant).first()
+    if request.method != 'POST':
+        # Selalu arahkan ke detail; kita tidak render halaman form terpisah
+        url = f"{reverse('restaurants:detail', args=[restaurant.id])}?tab=reviews"
+        return redirect(url)
 
-    if existing_review:
-        messages.warning(request, 'Kamu sudah pernah memberi ulasan untuk restoran ini.')
-        return redirect('restaurants:detail', restaurant_id=restaurant.id)
+    rating = request.POST.get('rating')
+    comment = request.POST.get('comment')
+    photo = request.FILES.get('photo')
 
-    if request.method == 'POST':
-        rating = request.POST.get('rating')
-        comment = request.POST.get('comment')
-        photo = request.FILES.get('photo')
+    if not rating or not comment:
+        messages.error(request, "Rating and comment are required.")
+        url = f"{reverse('restaurants:detail', args=[restaurant.id])}?tab=reviews"
+        return redirect(url)
 
-        if not rating or not comment:
-            messages.error(request, 'Rating dan komentar wajib diisi.')
-        else:
-            try:
-                review = Review.objects.create(
-                    user = request.user,
-                    restaurant = restaurant,
-                    rating = int(rating),
-                    comment = comment,
-                    photo = photo
-                )
-                messages.success(request, 'Terima kasih atas ulasannya! 🎉')
-                return redirect('restaurants:detail', restaurant_id=restaurant.id)
-            except IntegrityError:
-                messages.error(request, 'Gagal menyimpan ulasan. Coba lagi.')
+    try:
+        Review.objects.create(
+            user=request.user,
+            restaurant=restaurant,
+            rating=int(rating),
+            comment=comment,
+            photo=photo if photo else None,
+        )
+        messages.success(request, "Review added successfully!")
+    except Exception as e:
+        messages.error(request, f"Failed to add review. Please try again. ({e})")
 
-    return render(request, 'reviews/write_review.html', {
-        'restaurant': restaurant
-    })
+    url = f"{reverse('restaurants:detail', args=[restaurant.id])}?tab=reviews"
+    return redirect(url)
+
 @login_required
 def edit_review(request, review_id):
     # Ambil review, pastikan user yang login adalah pemiliknya
@@ -54,7 +53,7 @@ def edit_review(request, review_id):
         comment = request.POST.get('comment')
 
         if not rating or not comment:
-            messages.error(request, 'Rating dan komentar wajib diisi.')
+            messages.error(request, 'Rating and comment are required.')
         else:
             try:
                 review.rating = int(rating)
@@ -70,7 +69,6 @@ def edit_review(request, review_id):
         'restaurant': restaurant
     })
 
-
 @login_required
 def add_reply(request, review_id):
     review = get_object_or_404(Review, id=review_id)
@@ -79,7 +77,7 @@ def add_reply(request, review_id):
         reply_text = request.POST.get('reply_text')
         
         if not reply_text:
-            messages.error(request, 'Reply tidak boleh kosong.')
+            messages.error(request, 'Rating and comment are required.')
         else:
             try:
                 ReviewReply.objects.create(
@@ -87,9 +85,9 @@ def add_reply(request, review_id):
                     user=request.user,
                     reply_text=reply_text
                 )
-                messages.success(request, 'Reply berhasil ditambahkan!')
+                messages.success(request, 'Review added successfully!!')
             except Exception as e:
-                messages.error(request, 'Gagal menambahkan reply. Coba lagi.')
+                messages.error(request, 'Failed to add reply. Please try again.')
     
     return redirect('restaurants:detail', restaurant_id=review.restaurant.id)
 

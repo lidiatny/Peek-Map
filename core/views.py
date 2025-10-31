@@ -1,13 +1,12 @@
 # core/views.py
 from django.shortcuts import render, redirect
-from django.db.models import Avg, Value, Count, Case, When, IntegerField
+from django.db.models import Q, Avg, F, Value, FloatField, Count, Case, When, IntegerField
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models.functions import Coalesce
 from restaurants.models import Restaurant, Menu
 from reviews.models import Review
 from .utils import track_user_activity, get_recently_viewed_restaurants
-from django.db.models import Q
 from accounts.models import Bookmark
 from .recommendations import simple_recommendation
 
@@ -25,9 +24,9 @@ def home(request):
         'Italian': 'Italian',
     }
 
-    canon_cat = CATEGORY_MAP.get(category, category)  # fallback: pakai mentah
+    canon_cat = CATEGORY_MAP.get(category, category).strip()
 
-    resto_results = Restaurant.objects.none()
+    resto_results = Restaurant.objects.all()
     menu_results = Menu.objects.none()
 
     # === Search & filters ===
@@ -45,23 +44,23 @@ def home(request):
                 .distinct()
             )
             menu_results = Menu.objects.filter(name__icontains=query).select_related('restaurant')
-        else:
-            resto_results = Restaurant.objects.all()
 
-        if canon_cat:
-            resto_results = resto_results.filter(
-                Q(type__iexact=canon_cat) |              # ← pakai field yang benar
-                Q(description__icontains=canon_cat) 
-            )
+            if canon_cat and canon_cat.lower() not in ('all', 'all categories', 'semua'):
+                resto_results = resto_results.filter(cuisine_type__icontains=canon_cat)
 
         if min_rating:
+            clean = ''.join(ch for ch in str(min_rating) if ch.isdigit() or ch == '.')
             try:
-                thr = float(min_rating)
+                thr = float(clean)
             except ValueError:
                 thr = 0.0
+
             resto_results = (
                 resto_results
-                .annotate(rating_avg=Coalesce(Avg('reviews__rating'), 0.0))
+                .annotate(
+                    rating_avg=Coalesce(Avg('reviews__rating'), Value(0.0), output_field=FloatField()),
+                    effective_rating=Coalesce(Avg('reviews__rating'), F('rating'), Value(0.0), output_field=FloatField())
+                )
                 .filter(rating_avg__gte=thr)
             )
     else:
@@ -108,7 +107,7 @@ def home(request):
         'restaurants_all': restaurants_all,
         'restaurants_json': restaurants_json,
         'bookmarked_resto_ids': [],
-        'categories': ['China', 'Jepang', 'Western', 'Indonesia', 'Fast Food', 'Italian'],
+        'categories': ['China', 'Jepang', 'Western', 'Indonesia', 'Italian'],
         'recently_viewed': recently_viewed,
     }
     return render(request, 'core/home.html', context)
