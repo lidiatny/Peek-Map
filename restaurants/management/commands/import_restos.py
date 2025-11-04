@@ -135,7 +135,7 @@ class Command(BaseCommand):
                 defaults={
                     "name": name,
                     "cuisine_type": cuisine_type or None,  # db_column='type'
-                    "city": city or None,
+                    "address": city or None,
                     "keywords": keywords or None,
                     "price_range": price_range or None,
                     "menu_list": menu_list or None,
